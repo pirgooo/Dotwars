@@ -9,10 +9,11 @@ function secret(): string {
 export interface SessionPayload {
   address: string;
   exp: number;
+  stub?: boolean;
 }
 
-export function signSession(address: string): string {
-  const payload = Buffer.from(JSON.stringify({ address, exp: Date.now() + DAY }), "utf8").toString("base64url");
+export function signSession(address: string, stub = false): string {
+  const payload = Buffer.from(JSON.stringify({ address, exp: Date.now() + DAY, stub }), "utf8").toString("base64url");
   const sig = createHmac("sha256", secret()).update(payload).digest("base64url");
   return `${payload}.${sig}`;
 }

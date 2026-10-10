@@ -1,3 +1,4 @@
+import { formatStake } from "@dotwars/shared";
 import { WalletBar } from "../wallet/ConnectGramButton";
 import { Crystal, FoldMark } from "./origami/OrigamiArt";
 import { OrigamiDock, OrigamiDockSlot } from "./origami/OrigamiDock";
@@ -9,6 +10,7 @@ interface InviteChallengeProps {
   locked: boolean;
   error: string | null;
   canAccept: boolean;
+  stakeGrams: number;
   onAccept: () => void;
   onDecline: () => void;
 }
@@ -20,6 +22,7 @@ export function InviteChallenge({
   locked,
   error,
   canAccept,
+  stakeGrams,
   onAccept,
   onDecline,
 }: InviteChallengeProps) {
@@ -27,7 +30,9 @@ export function InviteChallenge({
     ? "Looking up invite"
     : expired
       ? "Invite expired"
-      : `${hostName} challenged you`;
+      : stakeGrams > 0
+        ? `${hostName} · ${formatStake(stakeGrams)}`
+        : `${hostName} challenged you`;
 
   return (
     <div className="origami-screen px-6 pb-6 pt-[var(--app-header)]">
@@ -48,7 +53,13 @@ export function InviteChallenge({
       </div>
       <OrigamiDock
         stats={
-          expired ? "This invite is no longer open" : canAccept ? "Accept to join the match" : "Connect Gram wallet to accept"
+          expired
+            ? "This invite is no longer open"
+            : !canAccept
+              ? "Connect Gram wallet to accept"
+              : stakeGrams > 0
+                ? "You send GRAM to the contract after join"
+                : "Accept to join the match"
         }
         error={error ? <p className="text-center text-[12px] text-white">{error}</p> : null}
       >

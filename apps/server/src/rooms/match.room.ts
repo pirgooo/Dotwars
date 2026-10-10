@@ -1,8 +1,23 @@
 import { Client, Room, ServerError } from "colyseus";
 import { verifySession } from "../auth/session";
+import { getEscrowConfig } from "../escrow/config";
+import {
+  markSimulatedPayment,
+  openEscrowMatch,
+  refundAll,
+  refundWallet,
+  reseatEscrowHost,
+  scanEscrowDeposits,
+  setEscrowGuest,
+  settleDraw,
+  settleWinner,
+  watchEscrow,
+} from "../escrow/service";
+import type { EscrowMatch } from "../escrow/store";
 import { registerInvite, unregisterInvite } from "./invite-store";
 import { getPlayer, recordMatchResult, type StoredPlayer } from "../auth/player-store";
 import {
+  clampStakeGrams,
   applyArrival,
   applyGrowth,
   applyLaunch,
@@ -58,12 +73,24 @@ export class MatchRoom extends Room<GameState> {
   private mode: MatchMode = "bot";
   private queue: "open" | "private" = "open";
   private statsRecorded = false;
+  private escrowSettled = false;
+  private escrowUnsub: (() => void) | null = null;
 
-  onCreate(options?: { mode?: string; queue?: string }) {
+  onCreate(options?: { mode?: string; queue?: string; stakeGrams?: number }) {
     this.mode = options?.mode === "pvp" ? "pvp" : "bot";
     this.queue = options?.queue === "private" ? "private" : "open";
+    this.state.stakeGrams = this.queue === "private" ? clampStakeGrams(options?.stakeGrams) : 0;
+    if (this.state.stakeGrams > 0) {
+      const escrow = getEscrowConfig();
+      if (!escrow.configured) {
+        throw new ServerError(503, "Escrow is not configured");
+      }
+      this.state.rakeBps = escrow.rakeBps;
+      this.state.escrow = "awaiting";
+    }
     this.maxClients = this.mode === "bot" ? 1 : 2;
-    this.setMetadata({ mode: this.mode, queue: this.queue });
+    this.setMetadata({ mode: this.mode, queue: this.queue, stakeGrams: this.state.stakeGrams });
+    this.escrowUnsub = watchEscrow(this.roomId, (row) => this.applyEscrow(row));
     if (this.queue === "private") {
       void this.setPrivate(true);
     }
@@ -76,10 +103,18 @@ export class MatchRoom extends Room<GameState> {
     this.onMessage(ClientMessage.RestartMatch, () => {
       this.restartMatch();
     });
+    this.onMessage(ClientMessage.EscrowSent, (client) => {
+      const player = this.state.players.get(client.sessionId);
+      if (!player?.walletAddress || this.state.stakeGrams <= 0) {
+        return;
+      }
+      void markSimulatedPayment(this.roomId, player.walletAddress);
+      void scanEscrowDeposits();
+    });
     this.setSimulationInterval((ms) => this.tick(ms / 1000), 50);
   }
 
-  async onAuth(_client: Client, options?: { token?: string }) {
+  async onAuth(_client: Client, options?: { token?: string; stakeGrams?: number }) {
     const session = verifySession(options?.token);
     if (!session) {
       throw new ServerError(401, "Connect Gram wallet");
@@ -88,7 +123,10 @@ export class MatchRoom extends Room<GameState> {
     if (!profile) {
       throw new ServerError(401, "Connect Gram wallet");
     }
-    return profile;
+    if ((this.state.stakeGrams > 0 || clampStakeGrams(options?.stakeGrams) > 0) && (session.stub || profile.stub)) {
+      throw new ServerError(403, "Connect Gram wallet");
+    }
+    return { ...profile, stub: Boolean(session.stub) };
   }
 
   onJoin(client: Client) {
@@ -111,6 +149,14 @@ export class MatchRoom extends Room<GameState> {
         this.beginWaiting();
       }
       this.publishPrivateInvite();
+      if (this.state.stakeGrams > 0) {
+        void openEscrowMatch({
+          roomId: this.roomId,
+          stakeGrams: this.state.stakeGrams,
+          rakeBps: this.state.rakeBps,
+          hostWallet: profile.address,
+        });
+      }
       return;
     }
 
@@ -126,6 +172,9 @@ export class MatchRoom extends Room<GameState> {
     this.state.players.set(client.sessionId, player);
     this.redPlayerId = client.sessionId;
     unregisterInvite(this.roomId);
+    if (this.state.stakeGrams > 0) {
+      void setEscrowGuest(this.roomId, profile.address);
+    }
     this.beginWaiting();
   }
 
@@ -141,6 +190,9 @@ export class MatchRoom extends Room<GameState> {
         this.state.phase = "ended";
         this.spawnQueue = [];
         this.recordHumanStats(leaving?.walletAddress);
+        this.settlePot();
+      } else if (this.state.escrow === "awaiting") {
+        void refundAll(this.roomId);
       }
       this.syncJoinLock();
       return;
@@ -152,18 +204,27 @@ export class MatchRoom extends Room<GameState> {
       remaining.color = PLAYER_COLORS[0];
     }
     if (this.mode === "pvp") {
-      if (this.state.phase === "playing") {
+      const lockedLobby = this.state.escrow === "locked" && this.state.phase === "waiting";
+      if (this.state.phase === "playing" || lockedLobby) {
         this.state.winnerId = this.bluePlayerId;
         this.state.timedOut = false;
         this.state.phase = "ended";
         this.spawnQueue = [];
         this.recordHumanStats(leaving?.walletAddress);
+        this.settlePot();
         this.syncJoinLock();
         return;
       }
       if (this.state.phase === "ended") {
         this.syncJoinLock();
         return;
+      }
+      if (this.state.escrow === "awaiting" && leaving?.walletAddress) {
+        void refundWallet(this.roomId, leaving.walletAddress).then(() => {
+          if (remaining?.walletAddress) {
+            void reseatEscrowHost(this.roomId, remaining.walletAddress);
+          }
+        });
       }
       this.beginQueue();
       return;
@@ -194,6 +255,14 @@ export class MatchRoom extends Room<GameState> {
   }
 
   private beginWaiting() {
+    if (this.state.stakeGrams > 0 && this.state.escrow === "awaiting") {
+      this.state.seekingOpponent = false;
+      this.state.phase = "waiting";
+      this.state.countdown = 0;
+      this.lobbyEndsAt = 0;
+      this.syncJoinLock();
+      return;
+    }
     this.maxClients = this.mode === "bot" ? 1 : 2;
     void this.unlock();
     this.resetField();
@@ -229,7 +298,7 @@ export class MatchRoom extends Room<GameState> {
   }
 
   private restartMatch() {
-    if (this.state.phase !== "ended") {
+    if (this.state.phase !== "ended" || this.state.stakeGrams > 0) {
       return;
     }
     if (this.mode === "pvp" && this.clients.length < 2) {
@@ -300,7 +369,7 @@ export class MatchRoom extends Room<GameState> {
     void this.setPrivate(true);
     const host = this.state.players.get(this.bluePlayerId) ?? this.state.players.get(this.clients[0]?.sessionId);
     if (host) {
-      registerInvite(this.roomId, host.name);
+      registerInvite(this.roomId, host.name, this.state.stakeGrams, this.state.rakeBps);
     }
   }
 
@@ -497,6 +566,7 @@ export class MatchRoom extends Room<GameState> {
     this.state.phase = "ended";
     this.spawnQueue = [];
     this.recordHumanStats();
+    this.settlePot();
     this.syncJoinLock();
   }
 
@@ -523,6 +593,7 @@ export class MatchRoom extends Room<GameState> {
     this.state.phase = "ended";
     this.spawnQueue = [];
     this.recordHumanStats();
+    this.settlePot();
     this.syncJoinLock();
   }
 
@@ -707,7 +778,45 @@ export class MatchRoom extends Room<GameState> {
     }
   }
 
+  private applyEscrow(row: EscrowMatch) {
+    this.state.hostPaid = Boolean(row.hostTx);
+    this.state.guestPaid = Boolean(row.guestTx);
+    if (row.status === "locked" && this.state.escrow === "awaiting" && this.clients.length >= 2) {
+      this.state.escrow = "locked";
+      this.beginWaiting();
+      return;
+    }
+    if (row.status === "settled") {
+      this.state.escrow = "settled";
+      this.state.payout = row.payoutNote === "sent" || row.payoutNote === "simulated" ? "sent" : "queued";
+      return;
+    }
+    if (row.status === "refunded") {
+      this.state.escrow = "refunded";
+      this.state.payout = "refunded";
+      return;
+    }
+    this.state.escrow = "awaiting";
+  }
+
+  private settlePot() {
+    if (this.state.stakeGrams <= 0 || this.escrowSettled) {
+      return;
+    }
+    this.escrowSettled = true;
+    const winner = this.state.players.get(this.state.winnerId);
+    if (this.state.winnerId && winner?.walletAddress) {
+      void settleWinner(this.roomId, winner.walletAddress);
+      return;
+    }
+    void settleDraw(this.roomId);
+  }
+
   onDispose() {
+    this.escrowUnsub?.();
     unregisterInvite(this.roomId);
+    if (this.state.escrow === "awaiting") {
+      void refundAll(this.roomId);
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatStake } from "@dotwars/shared";
 import { pulseTap, shareInviteLink } from "../telegram";
 import { Crystal, FoldMark } from "./origami/OrigamiArt";
 import { OrigamiDock, OrigamiDockSlot } from "./origami/OrigamiDock";
@@ -7,9 +8,21 @@ interface MatchmakingScreenProps {
   onCancel: () => void;
   inviting?: boolean;
   inviteUrl?: string | null;
+  stakeGrams?: number;
+  iPaid?: boolean;
+  sendingStake?: boolean;
+  onSendStake?: () => void;
 }
 
-export function MatchmakingScreen({ onCancel, inviting = false, inviteUrl }: MatchmakingScreenProps) {
+export function MatchmakingScreen({
+  onCancel,
+  inviting = false,
+  inviteUrl,
+  stakeGrams = 0,
+  iPaid = false,
+  sendingStake = false,
+  onSendStake,
+}: MatchmakingScreenProps) {
   const [copied, setCopied] = useState(false);
 
   const onShare = () => {
@@ -49,15 +62,32 @@ export function MatchmakingScreen({ onCancel, inviting = false, inviteUrl }: Mat
         <Crystal className="h-24 w-24 animate-pulse" />
         <h1 className="origami-title mt-8 text-[42px]">{inviting ? "invite" : "search"}</h1>
         <p className="origami-kicker mt-3 text-white/80">
-          {inviting ? "Versus a friend" : "Finding an opponent"}
+          {inviting
+            ? stakeGrams > 0
+              ? iPaid
+                ? `${formatStake(stakeGrams)} · stake sent`
+                : `${formatStake(stakeGrams)} · send to lock`
+              : "Versus a friend"
+            : "Finding an opponent"}
         </p>
       </div>
       <OrigamiDock stats={<span className="invisible">0 games · 0 wins · 0 losses</span>}>
         {inviting ? (
           <>
-            <button type="button" onClick={onShare} disabled={!inviteUrl} className="origami-pill w-full">
-              Share in Telegram
-            </button>
+            {stakeGrams > 0 && onSendStake && !iPaid ? (
+              <button
+                type="button"
+                disabled={sendingStake}
+                onClick={onSendStake}
+                className="origami-pill w-full"
+              >
+                {sendingStake ? "Open wallet" : `Send ${formatStake(stakeGrams)}`}
+              </button>
+            ) : (
+              <button type="button" onClick={onShare} disabled={!inviteUrl} className="origami-pill w-full">
+                Share in Telegram
+              </button>
+            )}
             <button type="button" onClick={() => void onCopy()} className="origami-pill origami-ghost w-full">
               {copied ? "Copied" : "Copy link"}
             </button>

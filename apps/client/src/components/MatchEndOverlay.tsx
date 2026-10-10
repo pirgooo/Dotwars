@@ -1,11 +1,20 @@
 interface MatchEndOverlayProps {
   result: "win" | "lose" | "draw";
   timedOut: boolean;
+  stakeNote?: string;
+  canRestart?: boolean;
   onRestart: () => void;
   onMenu: () => void;
 }
 
-export function MatchEndOverlay({ result, timedOut, onRestart, onMenu }: MatchEndOverlayProps) {
+export function MatchEndOverlay({
+  result,
+  timedOut,
+  stakeNote,
+  canRestart = true,
+  onRestart,
+  onMenu,
+}: MatchEndOverlayProps) {
   const title = result === "win" ? "Victory" : result === "lose" ? "Defeat" : "Draw";
   const detail =
     result === "draw"
@@ -23,11 +32,17 @@ export function MatchEndOverlay({ result, timedOut, onRestart, onMenu }: MatchEn
       <div className="w-full max-w-xs border border-white/30 px-6 py-10 text-center text-white">
         <p className="origami-kicker text-white/70">Dot wars</p>
         <h2 className="origami-title mt-4 text-[52px]">{title.toLowerCase()}</h2>
-        <p className="mt-3 text-sm leading-5 text-white/75">{detail}</p>
-        <button type="button" onClick={onRestart} className="origami-pill mt-8 w-full py-3.5">
-          Play again
-        </button>
-        <button type="button" onClick={onMenu} className="origami-pill origami-ghost mt-3 w-full py-3.5">
+        <p className="mt-3 text-sm leading-5 text-white/75">{stakeNote || detail}</p>
+        {canRestart ? (
+          <button type="button" onClick={onRestart} className="origami-pill mt-8 w-full py-3.5">
+            Play again
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={onMenu}
+          className={`origami-pill origami-ghost w-full py-3.5 ${canRestart ? "mt-3" : "mt-8"}`}
+        >
           Menu
         </button>
       </div>

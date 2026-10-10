@@ -8,6 +8,7 @@ export type MatchMode = "bot" | "pvp";
 export enum ClientMessage {
   SendTroops = "send_troops",
   RestartMatch = "restart_match",
+  EscrowSent = "escrow_sent",
 }
 
 export enum ServerMessage {

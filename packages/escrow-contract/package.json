@@ -1,0 +1,11 @@
+{
+  "name": "@dotwars/escrow-contract",
+  "version": "0.3.0",
+  "private": true,
+  "scripts": {
+    "build": "tact --config tact.config.json"
+  },
+  "devDependencies": {
+    "@tact-lang/compiler": "^1.6.13"
+  }
+}

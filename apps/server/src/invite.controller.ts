@@ -9,6 +9,6 @@ export class InviteController {
     if (!invite) {
       throw new NotFoundException("Invite expired");
     }
-    return { roomId, hostName: invite.hostName };
+    return { roomId, hostName: invite.hostName, stakeGrams: invite.stakeGrams, rakeBps: invite.rakeBps };
   }
 }

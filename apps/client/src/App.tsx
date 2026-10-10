@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
-import type { InviteInfo, MatchMode } from "@dotwars/shared";
+import { useTonConnectUI } from "@tonconnect/ui-react";
+import type { EscrowConfig, InviteInfo, MatchMode } from "@dotwars/shared";
+import { formatStake, winnerPayoutGrams } from "@dotwars/shared";
+import { EscrowScreen } from "./components/EscrowScreen";
 import { GameCanvas } from "./components/GameCanvas";
 import { InviteChallenge } from "./components/InviteChallenge";
+import { InviteStakeScreen } from "./components/InviteStakeScreen";
 import { MainMenu } from "./components/MainMenu";
 import { MatchEndOverlay } from "./components/MatchEndOverlay";
 import { MatchHud } from "./components/MatchHud";
@@ -9,11 +13,13 @@ import { MatchmakingScreen } from "./components/MatchmakingScreen";
 import { getApiUrl } from "./game/apiUrl";
 import { useMatchRoom } from "./game/useMatchRoom";
 import { bindBackButton, clearInviteFromUrl, pulseTap, readInviteCode } from "./telegram";
+import { fetchDepositIntent, sendEscrowDeposit } from "./wallet/sendEscrow";
 import { useWalletAuth } from "./wallet/WalletAuth";
 
 interface ChallengeView {
   roomId: string;
   hostName: string;
+  stakeGrams: number;
   expired: boolean;
 }
 
@@ -43,12 +49,30 @@ export function App(_props: AppProps) {
     leaveToMenu,
     sendTroops,
     restartMatch,
+    notifyEscrowSent,
+    stakeGrams,
+    rakeBps,
+    escrow,
+    hostPaid,
+    guestPaid,
+    payout,
   } = useMatchRoom();
   const auth = useWalletAuth();
+  const [tonConnectUI] = useTonConnectUI();
   const [challenge, setChallenge] = useState<ChallengeView | null>(null);
+  const [inviteIgnored, setInviteIgnored] = useState(false);
   const [inviteLookup, setInviteLookup] = useState(() => Boolean(readInviteCode()));
+  const [pickingStake, setPickingStake] = useState(false);
+  const [pendingStake, setPendingStake] = useState(0);
+  const [escrowConfig, setEscrowConfig] = useState<EscrowConfig | null>(null);
+  const [sendingStake, setSendingStake] = useState(false);
+  const [escrowError, setEscrowError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (inviteIgnored) {
+      setInviteLookup(false);
+      return;
+    }
     const code = readInviteCode();
     if (!code) {
       setInviteLookup(false);
@@ -65,19 +89,20 @@ export function App(_props: AppProps) {
             return;
           }
           if (!response.ok) {
-            setChallenge({ roomId: code, hostName: "", expired: true });
+            setChallenge({ roomId: code, hostName: "", stakeGrams: 0, expired: true });
             return;
           }
           const data = (await response.json()) as InviteInfo;
           setChallenge({
             roomId: data.roomId,
             hostName: data.hostName,
+            stakeGrams: data.stakeGrams ?? 0,
             expired: false,
           });
         })
         .catch(() => {
           if (!cancelled) {
-            setChallenge({ roomId: code, hostName: "", expired: true });
+            setChallenge({ roomId: code, hostName: "", stakeGrams: 0, expired: true });
           }
         })
         .finally(() => {
@@ -92,10 +117,19 @@ export function App(_props: AppProps) {
       cancelled = true;
       window.clearInterval(timer);
     };
+  }, [inviteIgnored]);
+
+  useEffect(() => {
+    void fetch(`${getApiUrl()}/escrow/config`)
+      .then((response) => response.json() as Promise<EscrowConfig>)
+      .then(setEscrowConfig)
+      .catch(() => setEscrowConfig(null));
   }, []);
 
   const declineChallenge = () => {
     pulseTap();
+    setInviteIgnored(true);
+    setInviteLookup(false);
     setChallenge(null);
     clearInviteFromUrl();
   };
@@ -111,27 +145,36 @@ export function App(_props: AppProps) {
       try {
         const response = await fetch(`${getApiUrl()}/invite/${encodeURIComponent(roomId)}`);
         if (!response.ok) {
-          setChallenge({ roomId, hostName: "", expired: true });
+          setChallenge({ roomId, hostName: "", stakeGrams: challenge.stakeGrams, expired: true });
           return;
         }
       } catch {
-        setChallenge({ roomId, hostName: challenge.hostName, expired: true });
+        setChallenge({ roomId, hostName: challenge.hostName, stakeGrams: challenge.stakeGrams, expired: true });
         return;
       }
+      setInviteIgnored(true);
+      setInviteLookup(false);
       setChallenge(null);
       clearInviteFromUrl();
       void joinInvite(roomId, token);
     })();
   };
 
-  const inMenu = !room && status !== "connecting" && !challenge && !inviteLookup;
+  const inMenu = !room && status !== "connecting" && !challenge && !inviteLookup && !pickingStake;
+  const funding =
+    Boolean(room) &&
+    stakeGrams > 0 &&
+    escrow === "awaiting" &&
+    !seekingOpponent &&
+    phase === "waiting";
   const pvpMatched =
     queuedMode === "pvp" &&
     Boolean(room) &&
     status === "live" &&
     !seekingOpponent &&
+    !funding &&
     (phase === "playing" || phase === "ended" || countdown > 0);
-  const searching = queuedMode === "pvp" && status !== "error" && !pvpMatched;
+  const searching = queuedMode === "pvp" && status !== "error" && !pvpMatched && !funding;
   const inMatch = Boolean(room && !searching);
 
   useEffect(() => {
@@ -139,9 +182,13 @@ export function App(_props: AppProps) {
       bindBackButton(declineChallenge);
       return () => bindBackButton(null);
     }
+    if (pickingStake) {
+      bindBackButton(() => setPickingStake(false));
+      return () => bindBackButton(null);
+    }
     bindBackButton(inMenu ? null : leaveToMenu);
     return () => bindBackButton(null);
-  }, [challenge, inviteLookup, inMenu, leaveToMenu]);
+  }, [challenge, inviteLookup, pickingStake, inMenu, leaveToMenu]);
 
   const onPlay = (mode: MatchMode) => {
     if (!auth.token) {
@@ -156,12 +203,47 @@ export function App(_props: AppProps) {
       return;
     }
     pulseTap();
-    void inviteFriend(auth.token);
+    setPickingStake(true);
+  };
+
+  const confirmInviteStake = (stakeGrams: number) => {
+    if (!auth.token) {
+      return;
+    }
+    setPendingStake(stakeGrams);
+    setPickingStake(false);
+    void inviteFriend(auth.token, stakeGrams);
   };
 
   const onBack = () => {
     pulseTap();
     leaveToMenu();
+  };
+
+  const iPaid = hostingInvite ? hostPaid : guestPaid;
+  const theyPaid = hostingInvite ? guestPaid : hostPaid;
+
+  const onSendStake = () => {
+    if (!room || sendingStake || iPaid) {
+      return;
+    }
+    setEscrowError(null);
+    setSendingStake(true);
+    void (async () => {
+      try {
+        if (escrowConfig?.simulate) {
+          notifyEscrowSent();
+          return;
+        }
+        const intent = await fetchDepositIntent(room.roomId);
+        await sendEscrowDeposit((tx) => tonConnectUI.sendTransaction(tx), intent);
+        notifyEscrowSent();
+      } catch (reason) {
+        setEscrowError(reason instanceof Error ? reason.message : "Could not send GRAM");
+      } finally {
+        setSendingStake(false);
+      }
+    })();
   };
 
   const result =
@@ -179,9 +261,26 @@ export function App(_props: AppProps) {
         loading={inviteLookup}
         locked={!auth.ready}
         error={error ?? auth.error}
-        canAccept={Boolean(auth.token && challenge && !challenge.expired)}
+        canAccept={Boolean(
+          auth.token &&
+            challenge &&
+            !challenge.expired &&
+            (challenge.stakeGrams <= 0 || !auth.player?.stub),
+        )}
+        stakeGrams={challenge?.stakeGrams ?? 0}
         onAccept={acceptChallenge}
         onDecline={declineChallenge}
+      />
+    );
+  }
+
+  if (pickingStake) {
+    return (
+      <InviteStakeScreen
+        walletOk={!auth.player?.stub}
+        escrow={escrowConfig}
+        onConfirm={confirmInviteStake}
+        onCancel={() => setPickingStake(false)}
       />
     );
   }
@@ -199,7 +298,32 @@ export function App(_props: AppProps) {
   }
 
   if (searching) {
-    return <MatchmakingScreen onCancel={onBack} inviting={hostingInvite} inviteUrl={inviteUrl} />;
+    return (
+      <MatchmakingScreen
+        onCancel={onBack}
+        inviting={hostingInvite}
+        inviteUrl={inviteUrl}
+        stakeGrams={stakeGrams || pendingStake}
+        iPaid={iPaid}
+        sendingStake={sendingStake}
+        onSendStake={stakeGrams > 0 || pendingStake > 0 ? onSendStake : undefined}
+      />
+    );
+  }
+
+  if (funding) {
+    return (
+      <EscrowScreen
+        stakeGrams={stakeGrams || pendingStake}
+        rakeBps={rakeBps || escrowConfig?.rakeBps || 0}
+        iPaid={iPaid}
+        theyPaid={theyPaid}
+        sending={sendingStake}
+        error={escrowError ?? error}
+        onSend={onSendStake}
+        onCancel={onBack}
+      />
+    );
   }
 
   if (status === "connecting" && !room) {
@@ -234,7 +358,24 @@ export function App(_props: AppProps) {
         />
 
         {room && phase === "ended" ? (
-          <MatchEndOverlay result={result} timedOut={timedOut} onRestart={restartMatch} onMenu={onBack} />
+          <MatchEndOverlay
+            result={result}
+            timedOut={timedOut}
+            canRestart={stakeGrams <= 0}
+            stakeNote={
+              stakeGrams > 0
+                ? result === "win"
+                  ? payout === "queued"
+                    ? `Payout queued · ${formatStake(winnerPayoutGrams(stakeGrams, rakeBps))}`
+                    : `Payout ${formatStake(winnerPayoutGrams(stakeGrams, rakeBps))}`
+                  : result === "draw"
+                    ? "Stakes refunded"
+                    : "Stake goes to the winner"
+                : undefined
+            }
+            onRestart={restartMatch}
+            onMenu={onBack}
+          />
         ) : null}
       </div>
     </div>

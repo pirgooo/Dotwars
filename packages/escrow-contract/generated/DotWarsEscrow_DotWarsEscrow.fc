@@ -1,0 +1,677 @@
+#pragma version =0.4.6;
+#pragma allow-post-modification;
+#pragma compute-asm-ltr;
+
+;; DotWarsEscrow_DotWarsEscrow.headers.fc
+;;
+;; Header files for DotWarsEscrow
+;; NOTE: declarations are sorted for optimal order
+;;
+
+;; __tact_context_get
+(int, slice, int, slice) __tact_context_get() inline;
+
+;; __tact_context_get_sender
+slice __tact_context_get_sender() inline;
+
+;; __tact_dict_get_uint_cell
+cell __tact_dict_get_uint_cell(cell d, int kl, int k) inline;
+
+;; __tact_dict_set_uint_cell
+(cell, ()) __tact_dict_set_uint_cell(cell d, int kl, int k, cell v) inline;
+
+;; $DeployOk$_store
+builder $DeployOk$_store(builder build_0, (int) v) inline;
+
+;; $DeployOk$_store_cell
+cell $DeployOk$_store_cell((int) v, builder b) inline;
+
+;; $MatchData$_store
+builder $MatchData$_store(builder build_0, (int, slice, slice, int, int, int, int, int) v) inline;
+
+;; $MatchData$_store_cell
+cell $MatchData$_store_cell((int, slice, slice, int, int, int, int, int) v, builder b) inline;
+
+;; $MatchData$_load
+(slice, ((int, slice, slice, int, int, int, int, int))) $MatchData$_load(slice sc_0) inline;
+
+;; $MatchData$_as_optional
+tuple $MatchData$_as_optional((int, slice, slice, int, int, int, int, int) v) inline;
+
+;; $MatchData$_load_opt
+tuple $MatchData$_load_opt(cell cl) inline;
+
+;; $DotWarsEscrow$_store
+builder $DotWarsEscrow$_store(builder build_0, (slice, slice, cell) v) inline;
+
+;; $DotWarsEscrow$_load
+(slice, ((slice, slice, cell))) $DotWarsEscrow$_load(slice sc_0) inline;
+
+;; $Context$_get_value
+_ $Context$_get_value((int, slice, int, slice) v) inline;
+
+;; $MatchData$_not_null
+((int, slice, slice, int, int, int, int, int)) $MatchData$_not_null(tuple v) inline;
+
+;; $MatchData$_to_external
+(int, slice, slice, int, int, int, int, int) $MatchData$_to_external(((int, slice, slice, int, int, int, int, int)) v) inline;
+
+;; $DotWarsEscrow$init$_load
+(slice, ((slice, slice))) $DotWarsEscrow$init$_load(slice sc_0) inline;
+
+;; $DotWarsEscrow$_contract_init
+(slice, slice, cell) $DotWarsEscrow$_contract_init(slice $oracle, slice $treasury) impure inline;
+
+;; $DotWarsEscrow$_contract_load
+(slice, slice, cell) $DotWarsEscrow$_contract_load() impure inline;
+
+;; $DotWarsEscrow$_contract_store
+() $DotWarsEscrow$_contract_store((slice, slice, cell) v) impure inline;
+
+;; $DotWarsEscrow$_fun_zero
+((slice, slice, cell), slice) $DotWarsEscrow$_fun_zero((slice, slice, cell) $self) impure inline_ref;
+
+;; $MatchData$_constructor_exists_host_guest_stake_rakeBps_hostPaid_guestPaid_settled
+((int, slice, slice, int, int, int, int, int)) $MatchData$_constructor_exists_host_guest_stake_rakeBps_hostPaid_guestPaid_settled(int $exists, slice $host, slice $guest, int $stake, int $rakeBps, int $hostPaid, int $guestPaid, int $settled) inline;
+
+;; $DotWarsEscrow$_fun_emptyMatch
+((slice, slice, cell), (int, slice, slice, int, int, int, int, int)) $DotWarsEscrow$_fun_emptyMatch((slice, slice, cell) $self) impure inline_ref;
+
+;; $DotWarsEscrow$_fun_load
+((slice, slice, cell), (int, slice, slice, int, int, int, int, int)) $DotWarsEscrow$_fun_load((slice, slice, cell) $self, int $id) impure inline_ref;
+
+;; $SendParameters$_constructor_to_value_bounce_mode
+((int, cell, cell, cell, int, slice, int)) $SendParameters$_constructor_to_value_bounce_mode(slice $to, int $value, int $bounce, int $mode) inline;
+
+;; $DotWarsEscrow$_fun_pay
+((slice, slice, cell), ()) $DotWarsEscrow$_fun_pay((slice, slice, cell) $self, slice $to, int $amount) impure inline_ref;
+
+;; $DotWarsEscrow$_fun_matchInfo
+((slice, slice, cell), (int, slice, slice, int, int, int, int, int)) $DotWarsEscrow$_fun_matchInfo((slice, slice, cell) $self, int $id) impure inline_ref;
+
+;; $DotWarsEscrow$_fun_oracle
+((slice, slice, cell), slice) $DotWarsEscrow$_fun_oracle((slice, slice, cell) $self) impure inline_ref;
+
+;; $DotWarsEscrow$_fun_treasury
+((slice, slice, cell), slice) $DotWarsEscrow$_fun_treasury((slice, slice, cell) $self) impure inline_ref;
+
+;; $MessageParameters$_constructor_bounce_to_value_mode_body
+((int, cell, int, slice, int)) $MessageParameters$_constructor_bounce_to_value_mode_body(int $bounce, slice $to, int $value, int $mode, cell $body) inline;
+
+;; $DotWarsEscrow$_fun_notify
+((slice, slice, cell), ()) $DotWarsEscrow$_fun_notify((slice, slice, cell) $self, cell $body) impure inline;
+
+;; $DeployOk$_constructor_queryId
+((int)) $DeployOk$_constructor_queryId(int $queryId) inline;
+
+
+;; DotWarsEscrow_DotWarsEscrow.stdlib.fc
+global (int, slice, int, slice) __tact_context;
+global slice __tact_context_sender;
+global cell __tact_child_contract_codes;
+global int __tact_randomized;
+
+(int, slice, int, slice) __tact_context_get() inline {
+    return __tact_context;
+}
+
+slice __tact_context_get_sender() inline {
+    return __tact_context_sender;
+}
+
+forall X0, X1, X2, X3, X4, X5, X6, X7 -> tuple __tact_tuple_create_8((X0, X1, X2, X3, X4, X5, X6, X7) v) asm """
+    8 TUPLE
+""";
+
+forall X0, X1, X2, X3, X4, X5, X6, X7 -> (X0, X1, X2, X3, X4, X5, X6, X7) __tact_tuple_destroy_8(tuple v) asm """
+    8 UNTUPLE
+""";
+
+cell __tact_dict_get_uint_cell(cell d, int kl, int k) inline {
+    var (r, ok) = udict_get_ref?(d, kl, k);
+    if (ok) {
+        return r;
+    } else {
+        return null();
+    }
+}
+
+(cell, ()) __tact_dict_set_uint_cell(cell d, int kl, int k, cell v) inline {
+    if (null?(v)) {
+        var (r, ok) = udict_delete?(d, kl, k);
+        return (r, ());
+    } else {
+        return (udict_set_ref(d, kl, k, v), ());
+    }
+}
+
+int $global_myBalance() impure asm """
+    BALANCE FIRST
+""";
+
+() $global_nativeReserve(int $amount, int $mode) impure asm """
+    RAWRESERVE
+""";
+
+() $global_message((int, cell, int, slice, int) $params) impure asm """
+    NEWC
+    b{01} STSLICECONST  // store tag = $0 and ihr_disabled = true
+    1 STI               // store `bounce`
+    b{000} STSLICECONST // store bounced = false and src = addr_none
+    STSLICE             // store `to`
+    SWAP
+    STGRAMS             // store `value`
+    106 PUSHINT         // 1 + 4 + 4 + 64 + 32 + 1
+    STZEROES
+    // → Stack state
+    // s0: Builder
+    // s1: `body`
+    // s2: `mode`
+    STDICT
+    ENDC
+    SWAP
+    SENDRAWMSG
+""";
+
+() $global_send((int, cell, cell, cell, int, slice, int) $params) impure asm """
+    NEWC
+    b{01} STSLICECONST  // store tag = $0 and ihr_disabled = true
+    1 STI               // store `bounce`
+    b{000} STSLICECONST // store bounced = false and src = addr_none
+    STSLICE             // store `to`
+    SWAP
+    STGRAMS             // store `value`
+    105 PUSHINT         // 1 + 4 + 4 + 64 + 32
+    STZEROES            // store currency_collection, ihr_fee, fwd_fee, created_lt and created_at
+    // → Stack state
+    // s0: Builder
+    // s1: `data`
+    // s2: `code`
+    // s3: `body`
+    // s4: `mode`
+
+    // Group 2: Placing the Builder after code and data, then checking those for nullability
+    s2 XCHG0
+    DUP2
+    ISNULL
+    SWAP
+    ISNULL
+    AND
+    // → Stack state
+    // s0: -1 (true) if `data` and `code` are both null, 0 (false) otherwise
+    // s1: `code`
+    // s2: `data`
+    // s3: Builder
+    // s4: `body`
+    // s5: `mode`
+
+    // Group 3: Left branch of the IFELSE, executed if s0 is -1 (true)
+    <{
+        DROP2 // drop `data` and `code`, since either of those is null
+        b{0} STSLICECONST
+    }> PUSHCONT
+
+    // Group 3: Right branch of the IFELSE, executed if s0 is 0 (false)
+    <{
+        // _ split_depth:(Maybe (## 5))
+        //   special:(Maybe TickTock)
+        //   code:(Maybe ^Cell)
+        //   data:(Maybe ^Cell)
+        //   library:(Maybe ^Cell)
+        // = StateInit;
+        ROT                // place message Builder on top
+        b{10} STSLICECONST // store Maybe = true, Either = false
+        // Start composing inlined StateInit
+        b{00} STSLICECONST // store split_depth and special first
+        STDICT             // store code
+        STDICT             // store data
+        b{0} STSLICECONST  // store library
+    }> PUSHCONT
+
+    // Group 3: IFELSE that does the branching shown above
+    IFELSE
+    // → Stack state
+    // s0: Builder
+    // s1: null or StateInit
+    // s2: `body`
+    // s3: `mode`
+
+    // Group 4: Finalizing the message
+    STDICT // store `body` as ref with an extra Maybe bit, since `body` might be null
+    ENDC
+    // → Stack state
+    // s0: Cell
+    // s1: `mode`
+
+    // Group 5: Sending the message, with `mode` on top
+    SWAP
+    SENDRAWMSG // https://github.com/tact-lang/tact/issues/1558
+""";
+
+((slice, slice, cell), ()) $DotWarsEscrow$_fun_notify((slice, slice, cell) $self, cell $body) impure inline {
+    var (($self'oracle, $self'treasury, $self'matches)) = $self;
+    slice $to = __tact_context_get_sender();
+    int $bounce = false;
+    if (false) {
+        int $balance = $global_myBalance();
+        int $balanceBeforeMessage = ($balance - $Context$_get_value(__tact_context_get()));
+        if (($balanceBeforeMessage < 0)) {
+            $global_nativeReserve(0, 0);
+            $global_message($MessageParameters$_constructor_bounce_to_value_mode_body($bounce, $to, 0, 130, $body));
+            return (($self'oracle, $self'treasury, $self'matches), ());
+        }
+    }
+    $global_message($MessageParameters$_constructor_bounce_to_value_mode_body($bounce, $to, 0, 66, $body));
+    return (($self'oracle, $self'treasury, $self'matches), ());
+}
+
+;; DotWarsEscrow_DotWarsEscrow.constants.fc
+;; EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c
+slice __gen_slice_address_61ab4641fa30d9310391025086eec65d200d79268e1b7cd402565e01ba64be3c() asm """
+    B{b5ee9c72410101010024000043800000000000000000000000000000000000000000000000000000000000000000104aec829d} B>boc <s PUSHSLICE
+""";
+
+;; DotWarsEscrow_DotWarsEscrow.storage.fc
+;;
+;; Type: Context
+;; TLB: _ bounceable:bool sender:address value:int257 raw:^slice = Context
+;;
+
+_ $Context$_get_value((int, slice, int, slice) v) inline {
+    var (v'bounceable, v'sender, v'value, v'raw) = v;
+    return v'value;
+}
+
+;;
+;; Type: SendParameters
+;; TLB: _ mode:int257 body:Maybe ^cell code:Maybe ^cell data:Maybe ^cell value:int257 to:address bounce:bool = SendParameters
+;;
+
+((int, cell, cell, cell, int, slice, int)) $SendParameters$_constructor_to_value_bounce_mode(slice $to, int $value, int $bounce, int $mode) inline {
+    return ($mode, null(), null(), null(), $value, $to, $bounce);
+}
+
+;;
+;; Type: MessageParameters
+;; TLB: _ mode:int257 body:Maybe ^cell value:int257 to:address bounce:bool = MessageParameters
+;;
+
+((int, cell, int, slice, int)) $MessageParameters$_constructor_bounce_to_value_mode_body(int $bounce, slice $to, int $value, int $mode, cell $body) inline {
+    return ($mode, $body, $value, $to, $bounce);
+}
+
+;;
+;; Type: DeployOk
+;; Header: 0xaff90f57
+;; TLB: deploy_ok#aff90f57 queryId:uint64 = DeployOk
+;;
+
+builder $DeployOk$_store(builder build_0, (int) v) inline {
+    var (v'queryId) = v;
+    build_0 = store_uint(build_0, 2952335191, 32);
+    build_0 = build_0.store_uint(v'queryId, 64);
+    return build_0;
+}
+
+cell $DeployOk$_store_cell((int) v, builder b) inline {
+    return $DeployOk$_store(b, v).end_cell();
+}
+
+((int)) $DeployOk$_constructor_queryId(int $queryId) inline {
+    return ($queryId);
+}
+
+;;
+;; Type: MatchData
+;; TLB: _ exists:bool host:address guest:address stake:coins rakeBps:uint16 hostPaid:bool guestPaid:bool settled:bool = MatchData
+;;
+
+builder $MatchData$_store(builder build_0, (int, slice, slice, int, int, int, int, int) v) inline {
+    var (v'exists, v'host, v'guest, v'stake, v'rakeBps, v'hostPaid, v'guestPaid, v'settled) = v;
+    build_0 = build_0.store_int(v'exists, 1);
+    build_0 = build_0.store_slice(v'host);
+    build_0 = build_0.store_slice(v'guest);
+    build_0 = build_0.store_varuint16(v'stake);
+    build_0 = build_0.store_uint(v'rakeBps, 16);
+    build_0 = build_0.store_int(v'hostPaid, 1);
+    build_0 = build_0.store_int(v'guestPaid, 1);
+    build_0 = build_0.store_int(v'settled, 1);
+    return build_0;
+}
+
+cell $MatchData$_store_cell((int, slice, slice, int, int, int, int, int) v, builder b) inline {
+    return $MatchData$_store(b, v).end_cell();
+}
+
+(slice, ((int, slice, slice, int, int, int, int, int))) $MatchData$_load(slice sc_0) inline {
+    var v'exists = sc_0~load_int(1);
+    var v'host = sc_0~load_msg_addr();
+    var v'guest = sc_0~load_msg_addr();
+    var v'stake = sc_0~load_varuint16();
+    var v'rakeBps = sc_0~load_uint(16);
+    var v'hostPaid = sc_0~load_int(1);
+    var v'guestPaid = sc_0~load_int(1);
+    var v'settled = sc_0~load_int(1);
+    return (sc_0, (v'exists, v'host, v'guest, v'stake, v'rakeBps, v'hostPaid, v'guestPaid, v'settled));
+}
+
+tuple $MatchData$_as_optional((int, slice, slice, int, int, int, int, int) v) inline {
+    var (v'exists, v'host, v'guest, v'stake, v'rakeBps, v'hostPaid, v'guestPaid, v'settled) = v;
+    return __tact_tuple_create_8(v'exists, v'host, v'guest, v'stake, v'rakeBps, v'hostPaid, v'guestPaid, v'settled);
+}
+
+tuple $MatchData$_load_opt(cell cl) inline {
+    if (null?(cl)) {
+        return null();
+    }
+    var sc = cl.begin_parse();
+    return $MatchData$_as_optional(sc~$MatchData$_load());
+}
+
+((int, slice, slice, int, int, int, int, int)) $MatchData$_not_null(tuple v) inline {
+    var (int vvv'exists, slice vvv'host, slice vvv'guest, int vvv'stake, int vvv'rakeBps, int vvv'hostPaid, int vvv'guestPaid, int vvv'settled) = __tact_tuple_destroy_8(v);
+    return (vvv'exists, vvv'host, vvv'guest, vvv'stake, vvv'rakeBps, vvv'hostPaid, vvv'guestPaid, vvv'settled);
+}
+
+(int, slice, slice, int, int, int, int, int) $MatchData$_to_external(((int, slice, slice, int, int, int, int, int)) v) inline {
+    var (v'exists, v'host, v'guest, v'stake, v'rakeBps, v'hostPaid, v'guestPaid, v'settled) = v; 
+    return (v'exists, v'host, v'guest, v'stake, v'rakeBps, v'hostPaid, v'guestPaid, v'settled);
+}
+
+((int, slice, slice, int, int, int, int, int)) $MatchData$_constructor_exists_host_guest_stake_rakeBps_hostPaid_guestPaid_settled(int $exists, slice $host, slice $guest, int $stake, int $rakeBps, int $hostPaid, int $guestPaid, int $settled) inline {
+    return ($exists, $host, $guest, $stake, $rakeBps, $hostPaid, $guestPaid, $settled);
+}
+
+;;
+;; Type: DotWarsEscrow
+;; TLB: _ oracle:address treasury:address matches:dict<uint256, ^MatchData{exists:bool,host:address,guest:address,stake:coins,rakeBps:uint16,hostPaid:bool,guestPaid:bool,settled:bool}> = DotWarsEscrow
+;;
+
+builder $DotWarsEscrow$_store(builder build_0, (slice, slice, cell) v) inline {
+    var (v'oracle, v'treasury, v'matches) = v;
+    build_0 = build_0.store_slice(v'oracle);
+    build_0 = build_0.store_slice(v'treasury);
+    build_0 = build_0.store_dict(v'matches);
+    return build_0;
+}
+
+(slice, ((slice, slice, cell))) $DotWarsEscrow$_load(slice sc_0) inline {
+    var v'oracle = sc_0~load_msg_addr();
+    var v'treasury = sc_0~load_msg_addr();
+    var v'matches = sc_0~load_dict();
+    return (sc_0, (v'oracle, v'treasury, v'matches));
+}
+
+(slice, ((slice, slice))) $DotWarsEscrow$init$_load(slice sc_0) inline {
+    var v'oracle = sc_0~load_msg_addr();
+    var v'treasury = sc_0~load_msg_addr();
+    return (sc_0, (v'oracle, v'treasury));
+}
+
+(slice, slice, cell) $DotWarsEscrow$_contract_load() impure inline {
+    slice $sc = get_data().begin_parse();
+    int $loaded = $sc~load_int(1);
+    if ($loaded) {
+        return $sc~$DotWarsEscrow$_load();
+    }
+    else {
+        (slice $oracle, slice $treasury) = $sc~$DotWarsEscrow$init$_load();
+        $sc.end_parse();
+        return $DotWarsEscrow$_contract_init($oracle, $treasury);
+    }
+}
+
+() $DotWarsEscrow$_contract_store((slice, slice, cell) v) impure inline {
+    builder b = begin_cell();
+    b = b.store_int(true, 1);
+    b = $DotWarsEscrow$_store(b, v);
+    set_data(b.end_cell());
+}
+
+;;
+;; Contract DotWarsEscrow functions
+;;
+
+(slice, slice, cell) $DotWarsEscrow$_contract_init(slice $oracle, slice $treasury) impure inline {
+    var (($self'oracle, $self'treasury, $self'matches)) = (null(), null(), null());
+    $self'oracle = $oracle;
+    $self'treasury = $treasury;
+    return ($self'oracle, $self'treasury, $self'matches);
+}
+
+((slice, slice, cell), slice) $DotWarsEscrow$_fun_zero((slice, slice, cell) $self) impure inline_ref {
+    var (($self'oracle, $self'treasury, $self'matches)) = $self;
+    var $fresh$ret_0 = __gen_slice_address_61ab4641fa30d9310391025086eec65d200d79268e1b7cd402565e01ba64be3c();
+    return (($self'oracle, $self'treasury, $self'matches), $fresh$ret_0);
+}
+
+((slice, slice, cell), (int, slice, slice, int, int, int, int, int)) $DotWarsEscrow$_fun_emptyMatch((slice, slice, cell) $self) impure inline_ref {
+    var (($self'oracle, $self'treasury, $self'matches)) = $self;
+    var $fresh$ret_1 = $MatchData$_constructor_exists_host_guest_stake_rakeBps_hostPaid_guestPaid_settled(false, ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_zero(), ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_zero(), 0, 0, false, false, false);
+    return (($self'oracle, $self'treasury, $self'matches), $fresh$ret_1);
+}
+
+((slice, slice, cell), (int, slice, slice, int, int, int, int, int)) $DotWarsEscrow$_fun_load((slice, slice, cell) $self, int $id) impure inline_ref {
+    var (($self'oracle, $self'treasury, $self'matches)) = $self;
+    tuple $found = $MatchData$_load_opt(__tact_dict_get_uint_cell($self'matches, 256, $id));
+    if (null?($found)) {
+        var $fresh$ret_2 = ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_emptyMatch();
+        return (($self'oracle, $self'treasury, $self'matches), $fresh$ret_2);
+    }
+    var $fresh$ret_3 = $MatchData$_not_null($found);
+    return (($self'oracle, $self'treasury, $self'matches), $fresh$ret_3);
+}
+
+((slice, slice, cell), ()) $DotWarsEscrow$_fun_pay((slice, slice, cell) $self, slice $to, int $amount) impure inline_ref {
+    var (($self'oracle, $self'treasury, $self'matches)) = $self;
+    if (($amount <= 0)) {
+        return (($self'oracle, $self'treasury, $self'matches), ());
+    }
+    $global_send($SendParameters$_constructor_to_value_bounce_mode($to, $amount, false, 2));
+    return (($self'oracle, $self'treasury, $self'matches), ());
+}
+
+((slice, slice, cell), (int, slice, slice, int, int, int, int, int)) $DotWarsEscrow$_fun_matchInfo((slice, slice, cell) $self, int $id) impure inline_ref {
+    var (($self'oracle, $self'treasury, $self'matches)) = $self;
+    var $fresh$ret_4 = ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_load($id);
+    return (($self'oracle, $self'treasury, $self'matches), $fresh$ret_4);
+}
+
+((slice, slice, cell), slice) $DotWarsEscrow$_fun_oracle((slice, slice, cell) $self) impure inline_ref {
+    var (($self'oracle, $self'treasury, $self'matches)) = $self;
+    var $fresh$ret_5 = $self'oracle;
+    return (($self'oracle, $self'treasury, $self'matches), $fresh$ret_5);
+}
+
+((slice, slice, cell), slice) $DotWarsEscrow$_fun_treasury((slice, slice, cell) $self) impure inline_ref {
+    var (($self'oracle, $self'treasury, $self'matches)) = $self;
+    var $fresh$ret_6 = $self'treasury;
+    return (($self'oracle, $self'treasury, $self'matches), $fresh$ret_6);
+}
+
+;;
+;; Get methods of a Contract DotWarsEscrow
+;;
+
+_ %matchInfo(int $id) method_id(98967) {
+    int $id = $id;
+    var self = $DotWarsEscrow$_contract_load();
+    var res = self~$DotWarsEscrow$_fun_matchInfo($id);
+    return $MatchData$_to_external(res);
+}
+
+_ %oracle() method_id(89095) {
+    var self = $DotWarsEscrow$_contract_load();
+    var res = self~$DotWarsEscrow$_fun_oracle();
+    return res;
+}
+
+_ %treasury() method_id(106403) {
+    var self = $DotWarsEscrow$_contract_load();
+    var res = self~$DotWarsEscrow$_fun_treasury();
+    return res;
+}
+
+;;
+;; Routing of a Contract DotWarsEscrow
+;;
+
+;; message opcode reader utility: only binary receivers
+;; Returns 32 bit message opcode, otherwise throws the "Invalid incoming message" exit code
+(slice, int) ~load_opcode_internal(slice s) asm( -> 1 0) "32 LDUQ 130 THROWIFNOT";
+
+() recv_internal(int msg_value, cell in_msg_cell, slice in_msg) impure {
+    
+    ;; Context
+    var cs = in_msg_cell.begin_parse();
+    cs~skip_bits(2);
+    var msg_bounceable = cs~load_int(1);
+    var msg_bounced = cs~load_int(1);
+    slice msg_sender_addr = cs~load_msg_addr();
+    __tact_context = (msg_bounceable, msg_sender_addr, msg_value, cs);
+    __tact_context_sender = msg_sender_addr;
+    
+    ;; Load contract data
+    var ($self'oracle, $self'treasury, $self'matches) = $DotWarsEscrow$_contract_load();
+    
+    ;; Handle bounced messages
+    if (msg_bounced) { return (); }
+    var op = in_msg~load_opcode_internal();
+    ;; Receive OpenMatch message
+    if (op == 0x4f50454e) {
+        var $msg'matchId = in_msg~load_uint(256);
+        var $msg'host = in_msg~load_msg_addr();
+        var $msg'stake = in_msg~load_varuint16();
+        var $msg'rakeBps = in_msg~load_uint(16);
+        throw_unless(21516, ( equal_slices_bits(__tact_context_get_sender(), $self'oracle) ));
+        throw_unless(35695, ($msg'stake > 0));
+        throw_unless(50521, ($msg'rakeBps <= 2000));
+        var ($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled) = ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_load($msg'matchId);
+        throw_unless(38048, ( ((~ $current'exists)) ? (true) : ($current'settled) ));
+        $self'matches~__tact_dict_set_uint_cell(256, $msg'matchId, $MatchData$_store_cell($MatchData$_constructor_exists_host_guest_stake_rakeBps_hostPaid_guestPaid_settled(true, $msg'host, ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_zero(), $msg'stake, $msg'rakeBps, false, false, false), begin_cell()));
+        $DotWarsEscrow$_contract_store(($self'oracle, $self'treasury, $self'matches));
+        return ();
+    }
+    
+    ;; Receive SetGuest message
+    if (op == 0x47534554) {
+        var $msg'matchId = in_msg~load_uint(256);
+        var $msg'guest = in_msg~load_msg_addr();
+        throw_unless(21516, ( equal_slices_bits(__tact_context_get_sender(), $self'oracle) ));
+        var ($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled) = ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_load($msg'matchId);
+        throw_unless(46519, ( ($current'exists) ? ((~ $current'settled)) : (false) ));
+        throw_unless(2230, (~ $current'guestPaid));
+        throw_unless(40440, ( (( equal_slices_bits($current'guest, ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_zero()) )) ? (true) : (( equal_slices_bits($current'guest, $msg'guest) )) ));
+        $current'guest = $msg'guest;
+        $self'matches~__tact_dict_set_uint_cell(256, $msg'matchId, $MatchData$_store_cell(($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled), begin_cell()));
+        $DotWarsEscrow$_contract_store(($self'oracle, $self'treasury, $self'matches));
+        return ();
+    }
+    
+    ;; Receive Deposit message
+    if (op == 0x4445504f) {
+        var $msg'matchId = in_msg~load_uint(256);
+        var ($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled) = ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_load($msg'matchId);
+        throw_unless(46519, ( ($current'exists) ? ((~ $current'settled)) : (false) ));
+        throw_unless(29117, ($Context$_get_value(__tact_context_get()) >= $current'stake));
+        if (( equal_slices_bits(__tact_context_get_sender(), $current'host) )) {
+            throw_unless(60283, (~ $current'hostPaid));
+            $current'hostPaid = true;
+        } else {
+            throw_unless(40440, (~ $current'guestPaid));
+            if (( equal_slices_bits($current'guest, ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_zero()) )) {
+                $current'guest = __tact_context_get_sender();
+            } else {
+                throw_unless(40440, ( equal_slices_bits(__tact_context_get_sender(), $current'guest) ));
+            }
+            $current'guestPaid = true;
+        }
+        $self'matches~__tact_dict_set_uint_cell(256, $msg'matchId, $MatchData$_store_cell(($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled), begin_cell()));
+        $DotWarsEscrow$_contract_store(($self'oracle, $self'treasury, $self'matches));
+        return ();
+    }
+    
+    ;; Receive Settle message
+    if (op == 0x53544c45) {
+        var $msg'matchId = in_msg~load_uint(256);
+        var $msg'outcome = in_msg~load_uint(8);
+        throw_unless(21516, ( equal_slices_bits(__tact_context_get_sender(), $self'oracle) ));
+        var ($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled) = ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_load($msg'matchId);
+        throw_unless(46519, ( ($current'exists) ? ((~ $current'settled)) : (false) ));
+        throw_unless(51614, ( ($current'hostPaid) ? ($current'guestPaid) : (false) ));
+        throw_unless(14922, ($msg'outcome <= 2));
+        $current'settled = true;
+        $self'matches~__tact_dict_set_uint_cell(256, $msg'matchId, $MatchData$_store_cell(($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled), begin_cell()));
+        int $pot = ($current'stake * 2);
+        int $rake = (($pot * $current'rakeBps) / 10000);
+        int $prize = ($pot - $rake);
+        ifnot ($msg'outcome) {
+            ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_pay($current'host, $current'stake);
+            ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_pay($current'guest, $current'stake);
+            $DotWarsEscrow$_contract_store(($self'oracle, $self'treasury, $self'matches));
+            return ();
+        }
+        if (($msg'outcome == 1)) {
+            ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_pay($current'host, $prize);
+        } else {
+            ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_pay($current'guest, $prize);
+        }
+        ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_pay($self'treasury, $rake);
+        $DotWarsEscrow$_contract_store(($self'oracle, $self'treasury, $self'matches));
+        return ();
+    }
+    
+    ;; Receive Refund message
+    if (op == 0x52464e44) {
+        var $msg'matchId = in_msg~load_uint(256);
+        var ($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled) = ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_load($msg'matchId);
+        throw_unless(46519, ( ($current'exists) ? ((~ $current'settled)) : (false) ));
+        throw_unless(19671, (~ ( ($current'hostPaid) ? ($current'guestPaid) : (false) )));
+        slice $who = __tact_context_get_sender();
+        throw_unless(7604, ( (( (( equal_slices_bits($who, $self'oracle) )) ? (true) : (( equal_slices_bits($who, $current'host) )) )) ? (true) : (( equal_slices_bits($who, $current'guest) )) ));
+        if ($current'hostPaid) {
+            ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_pay($current'host, $current'stake);
+        }
+        if ($current'guestPaid) {
+            ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_pay($current'guest, $current'stake);
+        }
+        $current'hostPaid = false;
+        $current'guestPaid = false;
+        $current'settled = true;
+        $self'matches~__tact_dict_set_uint_cell(256, $msg'matchId, $MatchData$_store_cell(($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled), begin_cell()));
+        $DotWarsEscrow$_contract_store(($self'oracle, $self'treasury, $self'matches));
+        return ();
+    }
+    
+    ;; Receive RefundOne message
+    if (op == 0x52464e31) {
+        var $msg'matchId = in_msg~load_uint(256);
+        var $msg'who = in_msg~load_msg_addr();
+        throw_unless(21516, ( equal_slices_bits(__tact_context_get_sender(), $self'oracle) ));
+        var ($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled) = ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_load($msg'matchId);
+        throw_unless(46519, ( ($current'exists) ? ((~ $current'settled)) : (false) ));
+        throw_unless(19671, (~ ( ($current'hostPaid) ? ($current'guestPaid) : (false) )));
+        if (( (( equal_slices_bits($msg'who, $current'host) )) ? ($current'hostPaid) : (false) )) {
+            ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_pay($current'host, $current'stake);
+            $current'hostPaid = false;
+        } elseif (( (( (( ~ equal_slices_bits($current'guest, ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_zero()) )) ? (( equal_slices_bits($msg'who, $current'guest) )) : (false) )) ? ($current'guestPaid) : (false) )) {
+            ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_pay($current'guest, $current'stake);
+            $current'guestPaid = false;
+            $current'guest = ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_zero();
+        }
+        $self'matches~__tact_dict_set_uint_cell(256, $msg'matchId, $MatchData$_store_cell(($current'exists, $current'host, $current'guest, $current'stake, $current'rakeBps, $current'hostPaid, $current'guestPaid, $current'settled), begin_cell()));
+        $DotWarsEscrow$_contract_store(($self'oracle, $self'treasury, $self'matches));
+        return ();
+    }
+    
+    ;; Receive Deploy message
+    if (op == 0x946a98b6) {
+        var $deploy'queryId = in_msg~load_uint(64);
+        ($self'oracle, $self'treasury, $self'matches)~$DotWarsEscrow$_fun_notify($DeployOk$_store_cell($DeployOk$_constructor_queryId($deploy'queryId), begin_cell()));
+        $DotWarsEscrow$_contract_store(($self'oracle, $self'treasury, $self'matches));
+        return ();
+    }
+    
+    ;; Throw if not handled
+    throw(130);
+}

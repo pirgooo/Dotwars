@@ -43,6 +43,12 @@ export function useMatchRoom() {
   const [countdown, setCountdown] = useState(0);
   const [myBases, setMyBases] = useState(0);
   const [enemyBases, setEnemyBases] = useState(0);
+  const [stakeGrams, setStakeGrams] = useState(0);
+  const [rakeBps, setRakeBps] = useState(0);
+  const [escrow, setEscrow] = useState<GameState["escrow"]>("none");
+  const [hostPaid, setHostPaid] = useState(false);
+  const [guestPaid, setGuestPaid] = useState(false);
+  const [payout, setPayout] = useState("");
 
   if (!clientRef.current) {
     clientRef.current = new Client(getColyseusUrl());
@@ -62,6 +68,12 @@ export function useMatchRoom() {
     setSeekingOpponent(false);
     setInviteRoomId(null);
     setHostingInvite(false);
+    setStakeGrams(0);
+    setRakeBps(0);
+    setEscrow("none");
+    setHostPaid(false);
+    setGuestPaid(false);
+    setPayout("");
   }, []);
 
   const apply = useCallback((state: GameState, sessionId: string) => {
@@ -80,6 +92,12 @@ export function useMatchRoom() {
     setCountdown(state.countdown ?? 0);
     setMyBases(mine);
     setEnemyBases(enemy);
+    setStakeGrams(state.stakeGrams ?? 0);
+    setRakeBps(state.rakeBps ?? 0);
+    setEscrow(state.escrow ?? "none");
+    setHostPaid(Boolean(state.hostPaid));
+    setGuestPaid(Boolean(state.guestPaid));
+    setPayout(state.payout ?? "");
   }, []);
 
   const bindRoom = useCallback(
@@ -153,10 +171,16 @@ export function useMatchRoom() {
   );
 
   const inviteFriend = useCallback(
-    (token: string) =>
+    (token: string, stakeGrams = 0) =>
       beginJoin(
         token,
-        () => clientRef.current!.create<GameState>(ROOM_NAME, { mode: "pvp", queue: "private", token }),
+        () =>
+          clientRef.current!.create<GameState>(ROOM_NAME, {
+            mode: "pvp",
+            queue: "private",
+            token,
+            stakeGrams,
+          }),
         "pvp",
         true,
       ),
@@ -198,6 +222,10 @@ export function useMatchRoom() {
     roomRef.current?.send(ClientMessage.RestartMatch);
   }, []);
 
+  const notifyEscrowSent = useCallback(() => {
+    roomRef.current?.send(ClientMessage.EscrowSent);
+  }, []);
+
   return {
     status,
     error,
@@ -221,5 +249,12 @@ export function useMatchRoom() {
     leaveToMenu,
     sendTroops,
     restartMatch,
+    notifyEscrowSent,
+    stakeGrams,
+    rakeBps,
+    escrow,
+    hostPaid,
+    guestPaid,
+    payout,
   };
 }

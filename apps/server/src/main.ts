@@ -4,6 +4,7 @@ import { WebSocketTransport } from "@colyseus/ws-transport";
 import { ROOM_NAME } from "@dotwars/shared";
 import { Server } from "colyseus";
 import { AppModule } from "./app.module";
+import { startEscrowScanner } from "./escrow/service";
 import { MatchRoom } from "./rooms/match.room";
 
 async function bootstrap() {
@@ -21,6 +22,7 @@ async function bootstrap() {
   gameServer.define(ROOM_NAME, MatchRoom).filterBy(["mode", "queue"]);
 
   const port = Number(process.env.PORT ?? 2567);
+  startEscrowScanner();
   await app.listen(port);
   console.log(`Dot Wars server listening on http://localhost:${port}`);
 }

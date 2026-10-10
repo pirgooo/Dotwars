@@ -66,6 +66,15 @@ export async function setPlayerName(address: string, name: string): Promise<Stor
   return player;
 }
 
+export async function setPlayerStub(address: string, stub: boolean): Promise<StoredPlayer> {
+  const player = await getOrCreatePlayer(address);
+  player.stub = stub;
+  const map = await load();
+  map.set(address, player);
+  await persist(map);
+  return player;
+}
+
 export async function recordMatchResult(address: string, result: "win" | "loss" | "draw"): Promise<void> {
   const player = await getOrCreatePlayer(address);
   player.games += 1;

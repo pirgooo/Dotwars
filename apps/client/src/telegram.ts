@@ -175,11 +175,9 @@ export function readInviteCode(): string | null {
 
 export function clearInviteFromUrl() {
   const url = new URL(window.location.href);
-  if (!url.searchParams.has("invite") && !url.searchParams.has("startapp")) {
-    return;
-  }
   url.searchParams.delete("invite");
   url.searchParams.delete("startapp");
+  url.searchParams.delete("tgWebAppStartParam");
   window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
 }
 

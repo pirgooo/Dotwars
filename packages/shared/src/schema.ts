@@ -36,6 +36,12 @@ export class GameState extends Schema {
   @type("float32") countdown = 0;
   @type("float32") timeLeft = 0;
   @type("int32") seed = -1;
+  @type("uint16") stakeGrams = 0;
+  @type("uint16") rakeBps = 0;
+  @type("string") escrow: "none" | "awaiting" | "locked" | "settled" | "refunded" = "none";
+  @type("boolean") hostPaid = false;
+  @type("boolean") guestPaid = false;
+  @type("string") payout = "";
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
   @type({ map: BaseState }) bases = new MapSchema<BaseState>();
   @type({ map: TroopState }) troops = new MapSchema<TroopState>();

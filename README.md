@@ -24,6 +24,7 @@ The client draws the field with **PixiJS v8** and the UI with **React + Tailwind
 
 - Vs bots (two-bot FFA) and invite 1v1 PvP
 - Guest duel screen: accept / decline
+- Invite PvP escrow: non-custodial TON contract, 10% rake, winner payout / draw refund
 - Gram/TON wallet login (`ton_proof`); temporary **DEV** stub for demos
 - Origami Klein-blue UI, fullscreen Mini App, iPhone safe area
 - Live host: `dotwars.candysshare.online`
@@ -34,7 +35,7 @@ Public matchmaking (**Find a match**) is a Coming soon stub. Stats live in a JSO
 
 ## Versioning
 
-The game is **one version** for the whole monorepo (`0.2.0` now). Client, server, and `shared` keep the same number. Do not version packages separately.
+The game is **one version** for the whole monorepo (`0.3.0` now). Client, server, `shared`, and the escrow contract keep the same number. Do not version packages separately.
 
 Source of truth: a git tag `vX.Y.Z` plus a [GitHub Release](https://github.com/pirgooo/Dotwars/releases).
 
@@ -110,6 +111,14 @@ Server env (`apps/server/.env`):
 | `SESSION_SECRET` | Required in production |
 | `ALLOW_STUB_AUTH` | `1` keeps the **DEV** login |
 | `TON_PROOF_DOMAINS` | Domains allowed in `ton_proof` |
+| `ESCROW_CONTRACT` | Deployed escrow contract (holds stakes) |
+| `ORACLE_WALLET` | Server signer, Wallet v4R2 (cannot withdraw the pot) |
+| `ORACLE_MNEMONIC` | Oracle key: open / settle / refund only |
+| `TREASURY_ADDRESS` | Rake recipient baked into the contract at deploy |
+| `RAKE_BPS` | House cut in basis points (`1000` = 10% of the pot) |
+| `GRAM_NANOTON` | Nanoton per 1 GRAM (`1000000000` = 1 TON) |
+| `TON_ENDPOINT` | Toncenter JSON-RPC |
+| `TON_API_KEY` | Toncenter API key |
 
 ---
 
@@ -121,7 +130,8 @@ dotwars/
 │   ├── client/          # Vite + React + Tailwind + PixiJS + Telegram SDK
 │   └── server/          # NestJS + Colyseus (authoritative game server)
 ├── packages/
-│   └── shared/          # types, DTOs, Colyseus schemas
+│   ├── shared/          # types, DTOs, Colyseus schemas
+│   └── escrow-contract/ # Tact escrow (non-custodial)
 ├── deploy/              # nginx, systemd, production env templates
 ├── package.json
 └── tsconfig.base.json
@@ -131,7 +141,8 @@ dotwars/
 | --- | --- | --- |
 | `apps/client` | `@dotwars/client` | Mini App: field canvas and React HUD |
 | `apps/server` | `@dotwars/server` | HTTP API, invites, `match` room, simulation |
-| `packages/shared` | `@dotwars/shared` | single contract for client and server |
+| `packages/shared` | `@dotwars/shared` | client/server DTO contract |
+| `packages/escrow-contract` | `@dotwars/escrow-contract` | TON escrow: stakes stay on-chain |
 
 New types, WebSocket messages, and state schemas are added only in `packages/shared`.
 

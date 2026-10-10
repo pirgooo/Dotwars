@@ -2,7 +2,7 @@ import { Body, Controller, ForbiddenException, Get, Headers, Patch, Post, Unauth
 import { Address } from "@ton/core";
 import type { AuthVerifyRequest } from "@dotwars/shared";
 import { consumeNonce, issueNonce } from "./nonce-store";
-import { getOrCreatePlayer, getPlayer, setPlayerName } from "./player-store";
+import { getPlayer, setPlayerName, setPlayerStub } from "./player-store";
 import { isRawAddress, randomPayload, randomRawAddress, signSession, verifySession } from "./session";
 import { verifyTonProof } from "./ton-proof";
 
@@ -36,8 +36,8 @@ export class AuthController {
       throw new ForbiddenException("Stub login is only available in development");
     }
     const address = body?.address && isRawAddress(body.address) ? body.address.toLowerCase() : randomRawAddress();
-    const player = await getOrCreatePlayer(address);
-    return { token: signSession(address), player };
+    const player = await setPlayerStub(address, true);
+    return { token: signSession(address, true), player: { ...player, stub: true } };
   }
 
   @Post("verify")
@@ -53,8 +53,8 @@ export class AuthController {
       throw new UnauthorizedException("Could not verify the wallet");
     }
     const address = canonicalAddress(body.address);
-    const player = await getOrCreatePlayer(address);
-    return { token: signSession(address), player };
+    const player = await setPlayerStub(address, false);
+    return { token: signSession(address, false), player: { ...player, stub: false } };
   }
 
   @Get("me")
@@ -67,7 +67,7 @@ export class AuthController {
     if (!player) {
       throw new UnauthorizedException("Player not found");
     }
-    return { player };
+    return { player: { ...player, stub: Boolean(session.stub || player.stub) } };
   }
 
   @Patch("me")

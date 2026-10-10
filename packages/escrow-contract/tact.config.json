@@ -1,0 +1,10 @@
+{
+  "projects": [
+    {
+      "name": "DotWarsEscrow",
+      "path": "./escrow.tact",
+      "output": "./generated",
+      "mode": "full"
+    }
+  ]
+}
