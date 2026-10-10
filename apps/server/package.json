@@ -1,0 +1,27 @@
+{
+  "name": "@dotwars/server",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "nest start --watch",
+    "build": "nest build",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@colyseus/ws-transport": "^0.16.5",
+    "@dotwars/shared": "*",
+    "@nestjs/common": "^11.1.8",
+    "@nestjs/core": "^11.1.8",
+    "@nestjs/platform-express": "^11.1.8",
+    "colyseus": "^0.16.5",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.10",
+    "@nestjs/schematics": "^11.0.9",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.2",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "dotwars",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "predev": "npm run build -w @dotwars/shared",
+    "dev": "concurrently -n shared,server,client -c cyan,magenta,green \"npm run dev -w @dotwars/shared\" \"npm run dev -w @dotwars/server\" \"npm run dev -w @dotwars/client\"",
+    "build": "npm run build -w @dotwars/shared && npm run build -w @dotwars/server && npm run build -w @dotwars/client",
+    "start": "npm run start -w @dotwars/server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
