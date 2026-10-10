@@ -1,4 +1,11 @@
-import { init, miniApp, swipeBehavior, viewport } from "@telegram-apps/sdk";
+import {
+  init,
+  miniApp,
+  requestContentSafeAreaInsets,
+  requestSafeAreaInsets,
+  swipeBehavior,
+  viewport,
+} from "@telegram-apps/sdk";
 
 interface TelegramThemeParams {
   bg_color?: string;
@@ -93,11 +100,11 @@ export function initTelegram(): boolean {
           viewport.bindCssVars();
         }
         await lockTelegramChrome();
-        if (viewport.requestSafeAreaInsets.isAvailable()) {
-          await viewport.requestSafeAreaInsets();
+        if (requestSafeAreaInsets.isAvailable()) {
+          await requestSafeAreaInsets();
         }
-        if (viewport.requestContentSafeAreaInsets.isAvailable()) {
-          await viewport.requestContentSafeAreaInsets();
+        if (requestContentSafeAreaInsets.isAvailable()) {
+          await requestContentSafeAreaInsets();
         }
       });
     } else {
