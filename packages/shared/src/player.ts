@@ -13,5 +13,6 @@ export interface Player {
   id: PlayerId;
   name: string;
   color: PlayerColor;
+  walletAddress?: string;
   telegramId?: number;
 }

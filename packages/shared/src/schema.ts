@@ -4,6 +4,7 @@ export class PlayerState extends Schema {
   @type("string") id = "";
   @type("string") name = "";
   @type("string") color = "";
+  @type("string") walletAddress = "";
   @type("number") telegramId = 0;
 }
 
@@ -13,6 +14,8 @@ export class BaseState extends Schema {
   @type("float32") y = 0;
   @type("uint16") garrison = 0;
   @type("string") ownerId = "";
+  @type("string") polygon = "";
+  @type("boolean") active = true;
 }
 
 export class TroopState extends Schema {
@@ -28,6 +31,7 @@ export class GameState extends Schema {
   @type("string") phase: "waiting" | "playing" | "ended" = "waiting";
   @type("string") winnerId = "";
   @type("boolean") versusBot = true;
+  @type("boolean") seekingOpponent = false;
   @type("boolean") timedOut = false;
   @type("float32") countdown = 0;
   @type("float32") timeLeft = 0;

@@ -3,6 +3,7 @@ export interface HudBase {
   x: number;
   y: number;
   radius: number;
+  towerWidth: number;
   garrison: number;
   mine: boolean;
 }

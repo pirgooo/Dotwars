@@ -1,15 +1,15 @@
 # Dot Wars
 
-Telegram Mini App. PvP RTS в стиле [State.io](https://state.io): захватывай базы, перекидывай войска, удерживай карту.
+Telegram Mini App. A PvP RTS in the style of [State.io](https://state.io): capture bases, send troops, hold the map.
 
-Клиент рисует поле на **PixiJS v8**, интерфейс — на **React + Tailwind CSS**. Сеть и симуляция — **Colyseus** на **NestJS**. Игрок видит только синхронизированную дельту состояния: считает и решает сервер.
+The client draws the field with **PixiJS v8** and the UI with **React + Tailwind CSS**. Networking and simulation run on **Colyseus** on **NestJS**. The player only sees a synchronized state delta: the server computes and decides.
 
 ```
   Telegram Mini App
           │
           ▼
    React + Tailwind UI
-   PixiJS Canvas (поле)
+   PixiJS Canvas (field)
           │  State Sync
           ▼
    NestJS + Colyseus
@@ -18,21 +18,21 @@ Telegram Mini App. PvP RTS в стиле [State.io](https://state.io): захв�
 
 ---
 
-## Стек
+## Stack
 
-| Слой | Технологии |
+| Layer | Tech |
 | --- | --- |
-| Монорепозиторий | TypeScript, npm workspaces |
-| Клиент | Vite, React, Tailwind CSS v4, PixiJS v8, `@telegram-apps/sdk` |
-| Сервер | Node.js, NestJS, Colyseus |
-| Данные | PostgreSQL, Redis |
-| Контракт | `@dotwars/shared` — типы, DTO, схемы Colyseus |
+| Monorepo | TypeScript, npm workspaces |
+| Client | Vite, React, Tailwind CSS v4, PixiJS v8, `@telegram-apps/sdk` |
+| Server | Node.js, NestJS, Colyseus |
+| Data | PostgreSQL, Redis |
+| Contract | `@dotwars/shared` — types, DTOs, Colyseus schemas |
 
 ---
 
-## Локальный запуск
+## Local setup
 
-Нужен **Node.js 20+**.
+Requires **Node.js 20+**.
 
 ```bash
 git clone https://github.com/pirgooo/Dotwars.git
@@ -41,56 +41,56 @@ npm install
 npm run dev
 ```
 
-`npm run dev` собирает `packages/shared` и параллельно поднимает:
+`npm run dev` builds `packages/shared` and starts in parallel:
 
-| Процесс | Адрес |
+| Process | URL |
 | --- | --- |
-| Клиент (Vite) | http://localhost:5173 |
-| Сервер (NestJS + Colyseus) | http://localhost:2567 |
+| Client (Vite) | http://localhost:5173 |
+| Server (NestJS + Colyseus) | http://localhost:2567 |
 | Health-check | http://localhost:2567/health |
 
-Отдельно:
+Separately:
 
 ```bash
 npm run build              # shared → server → client
-npm run start              # прод-сборка сервера
+npm run start              # production server build
 npm run dev -w @dotwars/client
 npm run dev -w @dotwars/server
 ```
 
-Мини-приложение открывается внутри Telegram. В обычном браузере UI работает, SDK Telegram при этом не инициализируется — так и задумано.
+The mini app opens inside Telegram. In a regular browser the UI works; the Telegram SDK does not initialize — that is expected.
 
 ---
 
-## Структура монорепозитория
+## Monorepo layout
 
 ```
 dotwars/
 ├── apps/
 │   ├── client/          # Vite + React + Tailwind + PixiJS + Telegram SDK
-│   └── server/          # NestJS + Colyseus (авторитетный игровой сервер)
+│   └── server/          # NestJS + Colyseus (authoritative game server)
 ├── packages/
-│   └── shared/          # общие типы, интерфейсы, DTO и Colyseus-схемы
-├── package.json         # npm workspaces, скрипт npm run dev
+│   └── shared/          # shared types, interfaces, DTOs, and Colyseus schemas
+├── package.json         # npm workspaces, npm run dev
 └── tsconfig.base.json
 ```
 
-| Пакет | Имя | Назначение |
+| Package | Name | Role |
 | --- | --- | --- |
-| `apps/client` | `@dotwars/client` | Mini App: Canvas поля (PixiJS) и HUD на React |
-| `apps/server` | `@dotwars/server` | HTTP API, матчмейкинг, комната `match`, симуляция |
-| `packages/shared` | `@dotwars/shared` | единый контракт клиента и сервера |
+| `apps/client` | `@dotwars/client` | Mini App: field canvas (PixiJS) and React HUD |
+| `apps/server` | `@dotwars/server` | HTTP API, matchmaking, `match` room, simulation |
+| `packages/shared` | `@dotwars/shared` | single contract for client and server |
 
-Новые типы, сообщения WebSocket и схемы состояния добавляются только в `packages/shared`. Клиент и сервер их импортируют, а не дублируют.
+New types, WebSocket messages, and state schemas are added only in `packages/shared`. Client and server import them instead of duplicating.
 
 ---
 
 ## Authoritative Server
 
-Игровая логика построена на паттерне **Authoritative Server**.
+Game logic follows the **Authoritative Server** pattern.
 
-Вся симуляция живёт на сервере: пересчёт войск, коллизии, движение юнитов, проверка победителя. Клиент **не** считает бой и **не** решает исход стычки. Он отправляет намерение (например, «отправь войска с базы A на базу B») и рисует то, что пришло по **State Sync**: Colyseus шлёт дельту `GameState`, а не полную картину каждый кадр.
+The full simulation lives on the server: troop updates, collisions, unit movement, winner checks. The client **does not** resolve combat and **does not** decide the match. It sends an intent (for example, “send troops from base A to base B”) and renders **State Sync**: Colyseus sends a `GameState` delta, not a full snapshot every frame.
 
-Так читы на клиенте не меняют мир, а PixiJS остаётся слоем отображения, а не источником правды.
+Client-side cheats cannot change the world. PixiJS is a display layer, not the source of truth.
 
-HMAC-SHA256 подпись Telegram `initData` на NestJS — когда появится прод, не раньше. Сейчас вход в комнату без неё.
+Player identity is the Gram/TON wallet. On local dev, Connect wallet is a login stub. Production will verify `ton_proof`.

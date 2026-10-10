@@ -1,17 +1,19 @@
-# Dot Wars — правила разработки
+# Dot Wars — development rules
 
-## Архитектура
+## Architecture
 
-Монорепозиторий TypeScript. Все общие типы, интерфейсы и DTO хранятся в `packages/shared`.
+TypeScript monorepo. Shared types, interfaces, and DTOs live in `packages/shared`.
 
-## Сервер (Authoritative Server)
+## Server (Authoritative Server)
 
-Вся игровая логика, пересчет войск, коллизии, движение юнитов и проверка победителя происходят ИСКЛЮЧИТЕЛЬНО на сервере (NestJS + Colyseus). Клиент получает только дельту состояния (State Sync).
+All game logic, troop updates, collisions, unit movement, and winner checks happen ONLY on the server (NestJS + Colyseus). The client receives state deltas (State Sync).
 
-## Клиент
+## Client
 
-Игровое поле рендерится через PixiJS v8 внутри React-компонента Canvas. Весь интерфейс (кнопки, плашки, таймеры) строится на React + Tailwind CSS поверх Canvas.
+The battlefield is rendered with PixiJS v8 inside a React canvas component. All UI (buttons, badges, timers) is React + Tailwind CSS on top of the canvas.
 
-## Безопасность
+Menu dock is always three pills via `OrigamiDock` (same width `max-w-80`, same gaps). Slot 1 = Vs bots, slot 2 = public matchmaking (currently a disabled Coming soon stub), slot 3 = Invite to PvP. On the public search screen, Cancel must sit in slot 2. Do not add or remove dock slots without keeping that alignment.
 
-Авторизация Telegram-пользователей проходит с обязательной валидацией HMAC-SHA256 подписи `initData` на стороне NestJS.
+## Security
+
+Player auth is via Gram/TON wallet: the server verifies `ton_proof` and issues a session bound to the wallet address. Nickname and stats belong to the wallet.

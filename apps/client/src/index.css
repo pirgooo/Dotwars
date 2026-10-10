@@ -1,7 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  --origami-blue: #3b4cff;
+  --origami-blue-deep: #2f3ee0;
+  --origami-ink: #1c1f4a;
+  --origami-muted: rgba(255, 255, 255, 0.72);
+  --font-display: "Fraunces", "Times New Roman", serif;
+  --font-ui: "Outfit", ui-sans-serif, system-ui, sans-serif;
 }
 
 html,
@@ -12,11 +18,105 @@ body,
 
 body {
   margin: 0;
-  background: #070b14;
-  color: #e8eefc;
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    sans-serif;
+  background: var(--origami-blue);
+  color: #fff;
+  font-family: var(--font-ui);
+}
+
+button {
+  font: inherit;
+}
+
+.origami-screen {
+  position: relative;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--origami-blue);
+  color: #fff;
+}
+
+.origami-screen::before,
+.origami-screen::after {
+  pointer-events: none;
+  content: "";
+  position: absolute;
+  z-index: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.origami-screen::before {
+  inset: 10px 10px auto 10px;
+  height: 18px;
+  border-bottom: 0;
+}
+
+.origami-screen::after {
+  inset: auto 10px 10px 10px;
+  height: 18px;
+  border-top: 0;
+}
+
+.origami-kicker {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+}
+
+.origami-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 14vw, 72px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
+
+.origami-pill {
+  border-radius: 999px;
+  background: #fff;
+  color: var(--origami-blue);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.origami-pill:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.origami-pill:disabled {
+  opacity: 0.4;
+}
+
+.origami-ghost {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: transparent;
+  color: #fff;
+}
+
+@keyframes hint-dash {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+.hint-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hint-ring 1.4s ease-in-out infinite;
+}
+
+@keyframes hint-ring {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.12);
+  }
 }

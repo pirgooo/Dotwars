@@ -4,12 +4,11 @@ interface MatchHudProps {
   status: "connecting" | "live" | "error";
   error: string | null;
   phase: "waiting" | "playing" | "ended";
-  versusBot: boolean;
-  telegramReady: boolean;
   timeLeft: number;
   countdown: number;
   myBases: number;
   enemyBases: number;
+  onBack: () => void;
 }
 
 function formatClock(seconds: number): string {
@@ -23,53 +22,52 @@ export function MatchHud({
   status,
   error,
   phase,
-  versusBot,
-  telegramReady,
   timeLeft,
   countdown,
   myBases,
   enemyBases,
+  onBack,
 }: MatchHudProps) {
-  const hint =
-    status === "connecting"
-      ? "Подключение к серверу…"
-      : status === "error"
-        ? (error ?? "Нет связи с сервером")
-        : phase === "ended"
-          ? "Бой окончен"
-          : phase === "waiting"
-            ? versusBot
-              ? "Ожидание соперника · иначе старт против бота"
-              : "Соперник на месте · старт"
-            : versusBot
-              ? telegramReady
-                ? "Против бота · потяни ½ или «все»"
-                : "Против бота"
-              : "PvP · потяни ½ или «все» с своей базы";
-
   const showClock = status === "live" && phase !== "waiting";
+  const showScore = status === "live" && phase !== "ended";
   const tick = Math.max(1, Math.min(COUNTDOWN_SECONDS, Math.ceil(countdown)));
+  const statusText =
+    status === "connecting"
+      ? "Connecting to server…"
+      : status === "error"
+        ? (error ?? "No server connection")
+        : null;
 
   return (
     <>
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-center gap-1 px-4 pt-5 text-center">
-        <div className="flex items-baseline gap-3">
-          <p className="text-[11px] uppercase tracking-[0.35em] text-sky-400">Dot Wars</p>
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 px-6 pt-[max(18px,env(safe-area-inset-top))]">
+        <button
+          type="button"
+          onClick={onBack}
+          className="pointer-events-auto rounded-full border border-white/70 px-3 py-1 text-xs font-medium text-white"
+        >
+          Back
+        </button>
+        <div className="flex items-center gap-2">
+          {statusText ? (
+            <p className="rounded-full border border-white/40 px-3 py-1 text-xs text-white/85">{statusText}</p>
+          ) : null}
           {showClock ? (
-            <p className="font-mono text-sm tabular-nums text-white">{formatClock(timeLeft)}</p>
+            <p className="rounded-full bg-white px-3 py-1 font-mono text-sm tabular-nums text-[var(--origami-blue)]">
+              {formatClock(timeLeft)}
+            </p>
+          ) : null}
+          {showScore ? (
+            <p className="rounded-full border border-white/70 px-3 py-1 text-xs tabular-nums text-white">
+              you {myBases} · enemy {enemyBases}
+            </p>
           ) : null}
         </div>
-        {status === "live" && phase !== "ended" ? (
-          <p className="text-xs text-slate-300">
-            свои {myBases} · враг {enemyBases}
-          </p>
-        ) : null}
-        <p className="text-xs text-slate-400">{hint}</p>
       </header>
 
       {status === "live" && phase === "waiting" ? (
         <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-          <p className="text-7xl font-semibold tabular-nums text-white/90">{tick}</p>
+          <p className="origami-title text-white">{tick}</p>
         </div>
       ) : null}
     </>

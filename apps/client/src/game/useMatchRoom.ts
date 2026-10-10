@@ -1,14 +1,18 @@
 import { Client, type Room } from "colyseus.js";
-import { ClientMessage, ROOM_NAME, type GameState, type SendPortion } from "@dotwars/shared";
-import { useCallback, useEffect, useState } from "react";
+import { ClientMessage, ROOM_NAME, type GameState, type MatchMode } from "@dotwars/shared";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getColyseusUrl } from "./colyseusUrl";
+import { buildInviteUrl } from "../telegram";
 
-export type MatchStatus = "connecting" | "live" | "error";
+export type MatchStatus = "idle" | "connecting" | "live" | "error";
 
 function countBases(state: GameState, sessionId: string): { mine: number; enemy: number } {
   let mine = 0;
   let enemy = 0;
   state.bases?.forEach((base) => {
+    if (base.active === false) {
+      return;
+    }
     if (base.ownerId === sessionId) {
       mine += 1;
     } else if (base.ownerId) {
@@ -19,100 +23,202 @@ function countBases(state: GameState, sessionId: string): { mine: number; enemy:
 }
 
 export function useMatchRoom() {
-  const [status, setStatus] = useState<MatchStatus>("connecting");
+  const clientRef = useRef<Client | null>(null);
+  const roomRef = useRef<Room<GameState> | null>(null);
+  const pollRef = useRef(0);
+  const joinGenRef = useRef(0);
+
+  const [status, setStatus] = useState<MatchStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [queuedMode, setQueuedMode] = useState<MatchMode | null>(null);
+  const [inviteRoomId, setInviteRoomId] = useState<string | null>(null);
+  const [hostingInvite, setHostingInvite] = useState(false);
   const [room, setRoom] = useState<Room<GameState> | null>(null);
   const [phase, setPhase] = useState<GameState["phase"]>("waiting");
   const [winnerId, setWinnerId] = useState("");
   const [versusBot, setVersusBot] = useState(true);
+  const [seekingOpponent, setSeekingOpponent] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [countdown, setCountdown] = useState(0);
   const [myBases, setMyBases] = useState(0);
   const [enemyBases, setEnemyBases] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    let poll = 0;
-    let joinedRoom: Room<GameState> | null = null;
-    const client = new Client(getColyseusUrl());
+  if (!clientRef.current) {
+    clientRef.current = new Client(getColyseusUrl());
+  }
 
-    const apply = (state: GameState, sessionId: string) => {
-      const phase = state.phase;
-      if (phase !== "waiting" && phase !== "playing" && phase !== "ended") {
-        return;
+  const clearRoom = useCallback(() => {
+    window.clearInterval(pollRef.current);
+    pollRef.current = 0;
+    roomRef.current = null;
+    setRoom(null);
+    setPhase("waiting");
+    setWinnerId("");
+    setTimeLeft(0);
+    setCountdown(0);
+    setMyBases(0);
+    setEnemyBases(0);
+    setSeekingOpponent(false);
+    setInviteRoomId(null);
+    setHostingInvite(false);
+  }, []);
+
+  const apply = useCallback((state: GameState, sessionId: string) => {
+    const nextPhase = state.phase;
+    if (nextPhase !== "waiting" && nextPhase !== "playing" && nextPhase !== "ended") {
+      return;
+    }
+    const { mine, enemy } = countBases(state, sessionId);
+    setStatus("live");
+    setPhase(nextPhase);
+    setWinnerId(state.winnerId ?? "");
+    setVersusBot(Boolean(state.versusBot));
+    setSeekingOpponent(Boolean(state.seekingOpponent));
+    setTimedOut(Boolean(state.timedOut));
+    setTimeLeft(state.timeLeft ?? 0);
+    setCountdown(state.countdown ?? 0);
+    setMyBases(mine);
+    setEnemyBases(enemy);
+  }, []);
+
+  const bindRoom = useCallback(
+    (joined: Room<GameState>, gen: number, invite: boolean) => {
+      roomRef.current = joined;
+      setRoom(joined);
+      if (invite) {
+        setInviteRoomId(joined.roomId);
       }
-      const { mine, enemy } = countBases(state, sessionId);
-      setStatus("live");
-      setPhase(phase);
-      setWinnerId(state.winnerId ?? "");
-      setVersusBot(Boolean(state.versusBot));
-      setTimedOut(Boolean(state.timedOut));
-      setTimeLeft(state.timeLeft ?? 0);
-      setCountdown(state.countdown ?? 0);
-      setMyBases(mine);
-      setEnemyBases(enemy);
-    };
-
-    void client
-      .joinOrCreate<GameState>(ROOM_NAME)
-      .then((joined) => {
-        joinedRoom = joined;
-        if (cancelled) {
+      apply(joined.state, joined.sessionId);
+      pollRef.current = window.setInterval(() => apply(joined.state, joined.sessionId), 100);
+      joined.onStateChange((state) => apply(state, joined.sessionId));
+      joined.onLeave(() => {
+        if (joinGenRef.current !== gen) {
           return;
         }
-        setRoom(joined);
-        apply(joined.state, joined.sessionId);
-        poll = window.setInterval(() => apply(joined.state, joined.sessionId), 100);
-        joined.onStateChange((state) => apply(state, joined.sessionId));
-        joined.onLeave(() => {
-          if (!cancelled) {
-            setStatus("error");
-            setError("Соединение с сервером закрыто");
-          }
-        });
-      })
-      .catch((reason: unknown) => {
-        if (cancelled) {
-          return;
-        }
+        clearRoom();
+        setQueuedMode(null);
         setStatus("error");
-        setError(reason instanceof Error ? reason.message : "Не удалось подключиться к серверу");
+        setError("Server connection closed");
       });
+    },
+    [apply, clearRoom],
+  );
 
+  const beginJoin = useCallback(
+    async (token: string, connect: () => Promise<Room<GameState>>, mode: MatchMode, invite: boolean) => {
+      const gen = joinGenRef.current + 1;
+      joinGenRef.current = gen;
+      setQueuedMode(mode);
+      setStatus("connecting");
+      setError(null);
+      setInviteRoomId(null);
+      setHostingInvite(invite);
+      if (roomRef.current) {
+        await roomRef.current.leave(true);
+        if (joinGenRef.current !== gen) {
+          return;
+        }
+        clearRoom();
+      }
+      try {
+        const joined = await connect();
+        if (joinGenRef.current !== gen) {
+          await joined.leave(true);
+          return;
+        }
+        bindRoom(joined, gen, invite);
+      } catch (reason: unknown) {
+        if (joinGenRef.current !== gen) {
+          return;
+        }
+        clearRoom();
+        setQueuedMode(null);
+        setStatus("error");
+        setError(reason instanceof Error ? reason.message : "Could not connect to the server");
+      }
+    },
+    [bindRoom, clearRoom],
+  );
+
+  const play = useCallback(
+    (mode: MatchMode, token: string) =>
+      beginJoin(
+        token,
+        () => clientRef.current!.joinOrCreate<GameState>(ROOM_NAME, { mode, queue: "open", token }),
+        mode,
+        false,
+      ),
+    [beginJoin],
+  );
+
+  const inviteFriend = useCallback(
+    (token: string) =>
+      beginJoin(
+        token,
+        () => clientRef.current!.create<GameState>(ROOM_NAME, { mode: "pvp", queue: "private", token }),
+        "pvp",
+        true,
+      ),
+    [beginJoin],
+  );
+
+  const joinInvite = useCallback(
+    (roomId: string, token: string) =>
+      beginJoin(token, () => clientRef.current!.joinById<GameState>(roomId, { token }), "pvp", false),
+    [beginJoin],
+  );
+
+  const leaveToMenu = useCallback(() => {
+    joinGenRef.current += 1;
+    const current = roomRef.current;
+    clearRoom();
+    setQueuedMode(null);
+    setStatus("idle");
+    setError(null);
+    void current?.leave(true);
+  }, [clearRoom]);
+
+  useEffect(() => {
     return () => {
-      cancelled = true;
-      window.clearInterval(poll);
-      void joinedRoom?.leave();
+      joinGenRef.current += 1;
+      window.clearInterval(pollRef.current);
+      void roomRef.current?.leave(true);
     };
   }, []);
 
-  const sendTroops = useCallback(
-    (fromBaseId: string, toBaseId: string, portion: SendPortion) => {
-      if (room?.state.phase !== "playing") {
-        return;
-      }
-      room.send(ClientMessage.SendTroops, { fromBaseId, toBaseId, portion });
-    },
-    [room],
-  );
+  const sendTroops = useCallback((fromBaseId: string, toBaseId: string) => {
+    if (roomRef.current?.state.phase !== "playing" || !toBaseId) {
+      return;
+    }
+    roomRef.current.send(ClientMessage.SendTroops, { fromBaseId, toBaseId });
+  }, []);
 
   const restartMatch = useCallback(() => {
-    room?.send(ClientMessage.RestartMatch);
-  }, [room]);
+    roomRef.current?.send(ClientMessage.RestartMatch);
+  }, []);
 
   return {
     status,
     error,
+    queuedMode,
     room,
     phase,
     winnerId,
     versusBot,
+    seekingOpponent,
     timedOut,
     timeLeft,
     countdown,
     myBases,
     enemyBases,
+    inviteRoomId,
+    hostingInvite,
+    inviteUrl: inviteRoomId ? buildInviteUrl(inviteRoomId) : null,
+    play,
+    inviteFriend,
+    joinInvite,
+    leaveToMenu,
     sendTroops,
     restartMatch,
   };

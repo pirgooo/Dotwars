@@ -1,8 +1,9 @@
 import type { BaseId } from "./base";
 import type { PlayerId } from "./player";
-import type { SendPortion } from "./rules";
 
 export const ROOM_NAME = "match";
+
+export type MatchMode = "bot" | "pvp";
 
 export enum ClientMessage {
   SendTroops = "send_troops",
@@ -17,7 +18,6 @@ export enum ServerMessage {
 export interface SendTroopsPayload {
   fromBaseId: BaseId;
   toBaseId: BaseId;
-  portion: SendPortion;
 }
 
 export interface MatchStartedPayload {

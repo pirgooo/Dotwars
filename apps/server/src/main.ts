@@ -7,6 +7,9 @@ import { AppModule } from "./app.module";
 import { MatchRoom } from "./rooms/match.room";
 
 async function bootstrap() {
+  if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET is required in production");
+  }
   const app = await NestFactory.create(AppModule);
   app.enableCors();
 
@@ -15,7 +18,7 @@ async function bootstrap() {
       server: app.getHttpServer(),
     }),
   });
-  gameServer.define(ROOM_NAME, MatchRoom);
+  gameServer.define(ROOM_NAME, MatchRoom).filterBy(["mode", "queue"]);
 
   const port = Number(process.env.PORT ?? 2567);
   await app.listen(port);
