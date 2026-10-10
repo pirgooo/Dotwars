@@ -88,14 +88,20 @@ export function initTelegram(): boolean {
     }
 
     if (viewport.mount.isAvailable()) {
-      void viewport.mount().then(() => {
+      void viewport.mount().then(async () => {
         if (viewport.bindCssVars.isAvailable()) {
           viewport.bindCssVars();
         }
-        lockTelegramChrome();
+        await lockTelegramChrome();
+        if (viewport.requestSafeAreaInsets.isAvailable()) {
+          await viewport.requestSafeAreaInsets();
+        }
+        if (viewport.requestContentSafeAreaInsets.isAvailable()) {
+          await viewport.requestContentSafeAreaInsets();
+        }
       });
     } else {
-      lockTelegramChrome();
+      void lockTelegramChrome();
     }
 
     applyTheme();
@@ -106,7 +112,7 @@ export function initTelegram(): boolean {
   }
 }
 
-function lockTelegramChrome() {
+async function lockTelegramChrome() {
   if (swipeBehavior.mount.isAvailable()) {
     swipeBehavior.mount();
   }
@@ -117,7 +123,7 @@ function lockTelegramChrome() {
     viewport.expand();
   }
   if (viewport.requestFullscreen.isAvailable()) {
-    void viewport.requestFullscreen();
+    await viewport.requestFullscreen();
   }
   const native = webApp();
   native?.expand?.();

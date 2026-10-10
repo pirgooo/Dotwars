@@ -218,8 +218,8 @@ export function App(_props: AppProps) {
         ) : null}
 
         <div className="pointer-events-none absolute inset-0 z-20" aria-hidden="true">
-          <div className="absolute inset-x-[10px] top-[10px] h-[18px] border border-b-0 border-white/28" />
-          <div className="absolute inset-x-[10px] bottom-[10px] h-[18px] border border-t-0 border-white/28" />
+          <div className="absolute inset-x-[10px] top-[var(--app-top)] h-[18px] border border-b-0 border-white/28" />
+          <div className="absolute inset-x-[10px] bottom-[var(--app-bottom)] h-[18px] border border-t-0 border-white/28" />
         </div>
 
         <MatchHud

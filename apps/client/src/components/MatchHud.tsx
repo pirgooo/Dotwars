@@ -40,7 +40,7 @@ export function MatchHud({
 
   return (
     <>
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 px-6 pt-[max(18px,env(safe-area-inset-top))]">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between gap-2 px-6 pt-[var(--app-top)]">
         <button
           type="button"
           onClick={onBack}

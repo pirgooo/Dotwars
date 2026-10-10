@@ -30,7 +30,7 @@ export function InviteChallenge({
       : `${hostName} challenged you`;
 
   return (
-    <div className="origami-screen px-6 pb-6 pt-[max(18px,env(safe-area-inset-top))]">
+    <div className="origami-screen px-6 pb-6 pt-[var(--app-top)]">
       <header className="relative z-10 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 text-white">
           <FoldMark className="h-7 w-7" />

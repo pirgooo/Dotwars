@@ -8,6 +8,20 @@
   --origami-muted: rgba(255, 255, 255, 0.72);
   --font-display: "Fraunces", "Times New Roman", serif;
   --font-ui: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --app-top: max(
+    18px,
+    calc(
+      max(env(safe-area-inset-top, 0px), var(--tg-viewport-safe-area-inset-top, 0px)) +
+        var(--tg-viewport-content-safe-area-inset-top, 0px)
+    )
+  );
+  --app-bottom: max(
+    8px,
+    calc(
+      max(env(safe-area-inset-bottom, 0px), var(--tg-viewport-safe-area-inset-bottom, 0px)) +
+        var(--tg-viewport-content-safe-area-inset-bottom, 0px)
+    )
+  );
 }
 
 html,
@@ -50,13 +64,17 @@ button {
 }
 
 .origami-screen::before {
-  inset: 10px 10px auto 10px;
+  top: var(--app-top);
+  right: 10px;
+  left: 10px;
   height: 18px;
   border-bottom: 0;
 }
 
 .origami-screen::after {
-  inset: auto 10px 10px 10px;
+  right: 10px;
+  bottom: var(--app-bottom);
+  left: 10px;
   height: 18px;
   border-top: 0;
 }
