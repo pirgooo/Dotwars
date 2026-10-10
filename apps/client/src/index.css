@@ -22,6 +22,10 @@
         var(--tg-viewport-content-safe-area-inset-bottom, 0px)
     )
   );
+  --app-header: calc(var(--app-top) + 30px);
+  --app-footer: calc(var(--app-bottom) + 10px);
+  --app-field-top: calc(var(--app-top) + 26px);
+  --app-field-bottom: calc(var(--app-bottom) + 26px);
 }
 
 html,

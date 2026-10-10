@@ -15,7 +15,7 @@ export function MainMenu({ busy, error, player, onPlay, onInvite }: MainMenuProp
   const locked = busy || !player;
 
   return (
-    <div className="origami-screen px-6 pb-6 pt-[var(--app-top)]">
+    <div className="origami-screen px-6 pb-6 pt-[var(--app-header)]">
       <header className="relative z-10 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 text-white">
           <FoldMark className="h-7 w-7" />

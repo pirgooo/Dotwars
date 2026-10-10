@@ -11,7 +11,7 @@ export function OrigamiDock({
   children: ReactNode;
 }) {
   return (
-    <div className="relative z-10 mt-auto space-y-3 pb-[var(--app-bottom)]">
+    <div className="relative z-10 mt-auto space-y-3 pb-[var(--app-footer)]">
       <div className="h-5 text-center text-[12px] tracking-wide text-white/75">{stats}</div>
       <div className="mx-auto grid w-full max-w-80 grid-rows-3 gap-3 [&>*]:flex [&>*]:h-14 [&>*]:items-center [&>*]:justify-center [&>*]:py-0">
         {children}

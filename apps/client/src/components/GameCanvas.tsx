@@ -165,7 +165,7 @@ export function GameCanvas({ room, playing, sendTroops }: GameCanvasProps) {
   return (
     <div
       ref={hostRef}
-      className="absolute inset-0 overflow-hidden touch-none"
+      className="absolute inset-x-3 top-[var(--app-field-top)] bottom-[var(--app-field-bottom)] overflow-hidden touch-none"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
