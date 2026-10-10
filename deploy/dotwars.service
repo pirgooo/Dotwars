@@ -1,0 +1,15 @@
+[Unit]
+Description=Dot Wars
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/dotwars/apps/server
+EnvironmentFile=/opt/dotwars/apps/server/.env
+ExecStart=/usr/bin/node dist/main.js
+Restart=always
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target
