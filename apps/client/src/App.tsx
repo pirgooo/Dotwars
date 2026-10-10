@@ -106,6 +106,7 @@ export function App(_props: AppProps) {
     }
     pulseTap();
     const roomId = challenge.roomId;
+    const token = auth.token;
     void (async () => {
       try {
         const response = await fetch(`${getApiUrl()}/invite/${encodeURIComponent(roomId)}`);
@@ -119,7 +120,7 @@ export function App(_props: AppProps) {
       }
       setChallenge(null);
       clearInviteFromUrl();
-      void joinInvite(roomId, auth.token);
+      void joinInvite(roomId, token);
     })();
   };
 
