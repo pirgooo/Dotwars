@@ -32,6 +32,22 @@ Public matchmaking (**Find a match**) is a Coming soon stub. Stats live in a JSO
 
 ---
 
+## Versioning
+
+The game is **one version** for the whole monorepo (`0.2.0` now). Client, server, and `shared` keep the same number. Do not version packages separately.
+
+Source of truth: a git tag `vX.Y.Z` plus a [GitHub Release](https://github.com/pirgooo/Dotwars/releases).
+
+| Bump | When |
+| --- | --- |
+| `MAJOR` (`v1.0.0`) | Breaking protocol or a public 1.0 |
+| `MINOR` (`v0.3.0`) | Features (queue, escrow, …) |
+| `PATCH` (`v0.2.1`) | Fixes |
+
+Until 1.0 we stay on `0.x`. Release: merge to `main` → tag → GitHub Release → pull and rebuild on the VPS.
+
+---
+
 ## Stack
 
 | Layer | Tech |
