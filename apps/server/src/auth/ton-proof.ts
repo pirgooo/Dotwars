@@ -11,7 +11,13 @@ function allowedDomains(): Set<string> {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
-  return new Set(["localhost:5173", "127.0.0.1:5173", "localhost", ...extra]);
+  return new Set([
+    "localhost:5173",
+    "127.0.0.1:5173",
+    "localhost",
+    "dotwars.candysshare.online",
+    ...extra,
+  ]);
 }
 
 function publicKeyCandidates(data: Cell): Buffer[] {

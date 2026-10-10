@@ -42,7 +42,7 @@ export class AuthController {
 
   @Post("verify")
   async verify(@Body() body: AuthVerifyRequest) {
-    if (!body?.address || !body.proof?.payload || !body.proof.signature || !body.publicKey || !body.proof.stateInit) {
+    if (!body?.address || !body.proof?.payload || !body.proof.signature || !body.proof.stateInit) {
       throw new UnauthorizedException("Invalid proof");
     }
     if (!consumeNonce(body.proof.payload)) {

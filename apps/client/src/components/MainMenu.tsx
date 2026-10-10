@@ -1,5 +1,5 @@
 import type { MatchMode, PlayerProfile } from "@dotwars/shared";
-import { ConnectGramButton } from "../wallet/ConnectGramButton";
+import { WalletBar } from "../wallet/ConnectGramButton";
 import { OrigamiDock } from "./origami/OrigamiDock";
 import { FoldMark, OrigamiGallery } from "./origami/OrigamiArt";
 
@@ -24,7 +24,7 @@ export function MainMenu({ busy, error, player, onPlay, onInvite }: MainMenuProp
             <p className="text-[10px] tracking-[0.18em] text-white/70">we love dots</p>
           </div>
         </div>
-        <ConnectGramButton />
+        <WalletBar />
       </header>
 
       <div className="relative z-10 mt-8 text-center">

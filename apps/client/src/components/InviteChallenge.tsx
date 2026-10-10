@@ -1,4 +1,4 @@
-import { ConnectGramButton } from "../wallet/ConnectGramButton";
+import { WalletBar } from "../wallet/ConnectGramButton";
 import { Crystal, FoldMark } from "./origami/OrigamiArt";
 import { OrigamiDock, OrigamiDockSlot } from "./origami/OrigamiDock";
 
@@ -39,7 +39,7 @@ export function InviteChallenge({
             <p className="text-[10px] tracking-[0.18em] text-white/70">we love dots</p>
           </div>
         </div>
-        <ConnectGramButton />
+        <WalletBar />
       </header>
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
         <Crystal className="h-24 w-24" />
