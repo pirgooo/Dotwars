@@ -1,4 +1,4 @@
-import { init, miniApp, viewport } from "@telegram-apps/sdk";
+import { init, miniApp, swipeBehavior, viewport } from "@telegram-apps/sdk";
 
 interface TelegramThemeParams {
   bg_color?: string;
@@ -29,6 +29,9 @@ interface TelegramWebApp {
   setBackgroundColor?: (color: string) => void;
   BackButton?: TelegramBackButton;
   openTelegramLink?: (url: string) => void;
+  expand?: () => void;
+  disableVerticalSwipes?: () => void;
+  requestFullscreen?: () => void;
 }
 
 interface TelegramHaptic {
@@ -86,8 +89,13 @@ export function initTelegram(): boolean {
 
     if (viewport.mount.isAvailable()) {
       void viewport.mount().then(() => {
-        viewport.expand.ifAvailable();
+        if (viewport.bindCssVars.isAvailable()) {
+          viewport.bindCssVars();
+        }
+        lockTelegramChrome();
       });
+    } else {
+      lockTelegramChrome();
     }
 
     applyTheme();
@@ -96,6 +104,25 @@ export function initTelegram(): boolean {
     applyTheme();
     return false;
   }
+}
+
+function lockTelegramChrome() {
+  if (swipeBehavior.mount.isAvailable()) {
+    swipeBehavior.mount();
+  }
+  if (swipeBehavior.disableVertical.isAvailable()) {
+    swipeBehavior.disableVertical();
+  }
+  if (viewport.expand.isAvailable()) {
+    viewport.expand();
+  }
+  if (viewport.requestFullscreen.isAvailable()) {
+    void viewport.requestFullscreen();
+  }
+  const native = webApp();
+  native?.expand?.();
+  native?.disableVerticalSwipes?.();
+  native?.requestFullscreen?.();
 }
 
 export function pulseTap() {
