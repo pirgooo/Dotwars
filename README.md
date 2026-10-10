@@ -44,7 +44,7 @@ Source of truth: a git tag `vX.Y.Z` plus a [GitHub Release](https://github.com/p
 | `MINOR` (`v0.3.0`) | Features (queue, escrow, …) |
 | `PATCH` (`v0.2.1`) | Fixes |
 
-Until 1.0 we stay on `0.x`. Release: merge to `main` → tag → GitHub Release → pull and rebuild on the VPS.
+Until 1.0 we stay on `0.x`. Release: merge to `main` → tag → GitHub Release → pull and rebuild on the VPS. The main menu shows `vX.Y.Z` in the bottom-right corner from `@dotwars/client`’s `package.json`.
 
 ---
 

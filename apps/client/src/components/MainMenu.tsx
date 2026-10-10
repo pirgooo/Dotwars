@@ -74,6 +74,9 @@ export function MainMenu({ busy, error, player, onPlay, onInvite }: MainMenuProp
           Invite to PvP
         </button>
       </OrigamiDock>
+      <p className="pointer-events-none absolute bottom-[var(--app-footer)] right-6 z-10 text-[10px] tracking-[0.18em] text-white/40">
+        v{__APP_VERSION__}
+      </p>
     </div>
   );
 }
