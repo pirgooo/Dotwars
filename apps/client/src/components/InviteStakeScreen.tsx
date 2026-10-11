@@ -38,7 +38,7 @@ export function InviteStakeScreen({ walletOk, escrow, onConfirm, onCancel }: Inv
         <h1 className="origami-title mt-8 text-[42px]">stake</h1>
         <p className="origami-kicker mt-3 text-white/80">
           {stakeGrams > 0
-            ? paidLive
+            ? paidLive && escrow
               ? `Winner takes ${formatStake(winnerPayoutGrams(stakeGrams, escrow.rakeBps))} · ${formatRake(escrow.rakeBps)} rake`
               : "Paid duels are not live yet"
             : "No GRAM this match"}
