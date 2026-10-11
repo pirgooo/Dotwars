@@ -1,7 +1,7 @@
 import { formatStake } from "@dotwars/shared";
 import { WalletBar } from "../wallet/ConnectGramButton";
 import { Crystal, FoldMark } from "./origami/OrigamiArt";
-import { OrigamiDock, OrigamiDockSlot } from "./origami/OrigamiDock";
+import { OrigamiDock, OrigamiDockSlot, OrigamiShell } from "./origami/OrigamiDock";
 
 interface InviteChallengeProps {
   hostName: string;
@@ -35,7 +35,7 @@ export function InviteChallenge({
         : `${hostName} challenged you`;
 
   return (
-    <div className="origami-screen px-6 pb-6 pt-[var(--app-header)]">
+    <OrigamiShell>
       <header className="relative z-10 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 text-white">
           <FoldMark className="h-7 w-7" />
@@ -46,7 +46,7 @@ export function InviteChallenge({
         </div>
         <WalletBar />
       </header>
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden text-center">
         <Crystal className="h-24 w-24" />
         <h1 className="origami-title mt-8 text-[42px]">duel</h1>
         <p className="origami-kicker mt-3 text-white/80">{kicker}</p>
@@ -76,6 +76,6 @@ export function InviteChallenge({
         </button>
         <OrigamiDockSlot>Invite to PvP</OrigamiDockSlot>
       </OrigamiDock>
-    </div>
+    </OrigamiShell>
   );
 }

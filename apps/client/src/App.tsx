@@ -10,6 +10,7 @@ import { MainMenu } from "./components/MainMenu";
 import { MatchEndOverlay } from "./components/MatchEndOverlay";
 import { MatchHud } from "./components/MatchHud";
 import { MatchmakingScreen } from "./components/MatchmakingScreen";
+import { OrigamiPageMark } from "./components/origami/OrigamiDock";
 import { getApiUrl } from "./game/apiUrl";
 import { useMatchRoom } from "./game/useMatchRoom";
 import { bindBackButton, clearInviteFromUrl, pulseTap, readInviteCode } from "./telegram";
@@ -41,6 +42,8 @@ export function App(_props: AppProps) {
     countdown,
     myBases,
     enemyBases,
+    me,
+    enemy,
     hostingInvite,
     inviteUrl,
     play,
@@ -330,6 +333,7 @@ export function App(_props: AppProps) {
     return (
       <div className="origami-screen items-center justify-center">
         <p className="origami-kicker relative z-10">Connecting</p>
+        <OrigamiPageMark />
       </div>
     );
   }
@@ -354,6 +358,9 @@ export function App(_props: AppProps) {
           countdown={countdown}
           myBases={myBases}
           enemyBases={enemyBases}
+          me={me}
+          enemy={enemy}
+          stakeGrams={stakeGrams}
           onBack={onBack}
         />
 
@@ -378,6 +385,7 @@ export function App(_props: AppProps) {
           />
         ) : null}
       </div>
+      <OrigamiPageMark />
     </div>
   );
 }

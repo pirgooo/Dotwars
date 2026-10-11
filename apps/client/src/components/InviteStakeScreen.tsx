@@ -2,7 +2,7 @@ import { useState } from "react";
 import { STAKE_PRESETS, formatRake, formatStake, winnerPayoutGrams, type EscrowConfig } from "@dotwars/shared";
 import { pulseTap } from "../telegram";
 import { Crystal, FoldMark } from "./origami/OrigamiArt";
-import { OrigamiDock, OrigamiDockSlot } from "./origami/OrigamiDock";
+import { OrigamiDock, OrigamiDockSlot, OrigamiShell } from "./origami/OrigamiDock";
 
 interface InviteStakeScreenProps {
   walletOk: boolean;
@@ -22,7 +22,7 @@ export function InviteStakeScreen({ walletOk, escrow, onConfirm, onCancel }: Inv
   };
 
   return (
-    <div className="origami-screen px-6 pb-6 pt-[var(--app-header)]">
+    <OrigamiShell>
       <header className="relative z-10 flex items-start">
         <div className="flex items-center gap-2 text-white">
           <FoldMark className="h-7 w-7" />
@@ -32,7 +32,7 @@ export function InviteStakeScreen({ walletOk, escrow, onConfirm, onCancel }: Inv
           </div>
         </div>
       </header>
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden text-center">
         <Crystal className="h-24 w-24" />
         <h1 className="origami-title mt-8 text-[42px]">stake</h1>
         <p className="origami-kicker mt-3 text-white/80">
@@ -85,6 +85,6 @@ export function InviteStakeScreen({ walletOk, escrow, onConfirm, onCancel }: Inv
           Cancel
         </button>
       </OrigamiDock>
-    </div>
+    </OrigamiShell>
   );
 }

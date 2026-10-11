@@ -6,20 +6,27 @@ Rake is paid by the contract to `treasury` on settle.
 
 ## Deploy
 
+Oracle must be **Wallet v4R2** (the script creates that). Treasury is any TON address that receives rake.
+
 ```bash
 npm install
-npm run build -w @dotwars/escrow-contract
+npm run oracle -w @dotwars/escrow-contract
 ```
 
-Deploy `generated/DotWarsEscrow_DotWarsEscrow.*` with Wallet v4R2:
+Save the 24 words offline. Send 1–2 TON to the printed oracle address.
 
-- `oracle` = the server signer (`ORACLE_WALLET`)
-- `treasury` = rake address (`TREASURY_ADDRESS`)
+```bash
+# PowerShell
+$env:ORACLE_MNEMONIC="word1 ... word24"
+$env:TREASURY_ADDRESS="EQ..."
+npm run deploy -w @dotwars/escrow-contract
+```
 
-Then set on the VPS:
+Then on the VPS:
 
 ```
 ESCROW_CONTRACT=EQ...
-ORACLE_MNEMONIC="..."
 ORACLE_WALLET=EQ...
+ORACLE_MNEMONIC="word1 ... word24"
+TREASURY_ADDRESS=EQ...
 ```

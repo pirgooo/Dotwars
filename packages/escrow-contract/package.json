@@ -3,9 +3,18 @@
   "version": "0.3.0",
   "private": true,
   "scripts": {
-    "build": "tact --config tact.config.json"
+    "build": "tact --config tact.config.json",
+    "oracle": "tsx scripts/wallet.ts gen-oracle",
+    "address": "tsx scripts/wallet.ts address",
+    "deploy": "tsx scripts/wallet.ts deploy"
+  },
+  "dependencies": {
+    "@ton/core": "^0.63.1",
+    "@ton/crypto": "^3.3.0",
+    "@ton/ton": "^16.3.0"
   },
   "devDependencies": {
-    "@tact-lang/compiler": "^1.6.13"
+    "@tact-lang/compiler": "^1.6.13",
+    "tsx": "^4.20.6"
   }
 }

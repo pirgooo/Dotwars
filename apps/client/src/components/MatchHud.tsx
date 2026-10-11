@@ -1,4 +1,5 @@
-import { COUNTDOWN_SECONDS } from "@dotwars/shared";
+import { COUNTDOWN_SECONDS, formatStake } from "@dotwars/shared";
+import type { HudFighter } from "../game/useMatchRoom";
 
 interface MatchHudProps {
   status: "connecting" | "live" | "error";
@@ -8,6 +9,9 @@ interface MatchHudProps {
   countdown: number;
   myBases: number;
   enemyBases: number;
+  me: HudFighter;
+  enemy: HudFighter;
+  stakeGrams?: number;
   onBack: () => void;
 }
 
@@ -18,6 +22,12 @@ function formatClock(seconds: number): string {
   return `${minutes}:${rest.toString().padStart(2, "0")}`;
 }
 
+function Dot({ color }: { color: string }) {
+  return (
+    <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ background: color }} aria-hidden="true" />
+  );
+}
+
 export function MatchHud({
   status,
   error,
@@ -26,6 +36,9 @@ export function MatchHud({
   countdown,
   myBases,
   enemyBases,
+  me,
+  enemy,
+  stakeGrams = 0,
   onBack,
 }: MatchHudProps) {
   const showClock = status === "live" && phase !== "waiting";
@@ -48,7 +61,7 @@ export function MatchHud({
         >
           Back
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex max-w-[72%] flex-wrap items-center justify-end gap-2">
           {statusText ? (
             <p className="rounded-full border border-white/40 px-3 py-1 text-xs text-white/85">{statusText}</p>
           ) : null}
@@ -57,9 +70,20 @@ export function MatchHud({
               {formatClock(timeLeft)}
             </p>
           ) : null}
+          {stakeGrams > 0 && showClock ? (
+            <p className="rounded-full border border-white/70 px-3 py-1 text-xs text-white">{formatStake(stakeGrams)}</p>
+          ) : null}
           {showScore ? (
-            <p className="rounded-full border border-white/70 px-3 py-1 text-xs tabular-nums text-white">
-              you {myBases} · enemy {enemyBases}
+            <p className="flex items-center gap-1.5 rounded-full border border-white/70 px-3 py-1 text-xs tabular-nums text-white">
+              <Dot color={me.color} />
+              <span className="max-w-20 truncate">
+                {me.name} {myBases}
+              </span>
+              <span className="text-white/50">·</span>
+              <Dot color={enemy.color} />
+              <span className="max-w-20 truncate">
+                {enemy.name} {enemyBases}
+              </span>
             </p>
           ) : null}
         </div>

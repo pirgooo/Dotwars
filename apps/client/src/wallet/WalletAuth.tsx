@@ -22,6 +22,7 @@ interface WalletAuthValue {
   error: string | null;
   loginStub: () => Promise<void>;
   loginWallet: () => Promise<void>;
+  rename: (name: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -32,6 +33,7 @@ const WalletAuthContext = createContext<WalletAuthValue>({
   error: null,
   loginStub: async () => undefined,
   loginWallet: async () => undefined,
+  rename: async () => undefined,
   logout: () => undefined,
 });
 
@@ -88,6 +90,26 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
       setError(reason instanceof Error ? reason.message : "Could not sign in");
     }
   }, [applySession, logout]);
+
+  const rename = useCallback(
+    async (name: string) => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        throw new Error("Connect Gram wallet");
+      }
+      setError(null);
+      const body = await fetch(`${getApiUrl()}/auth/me`, {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name }),
+      }).then((response) => readJson<{ player: PlayerProfile }>(response));
+      setPlayer((current) => ({ ...body.player, stub: current?.stub ?? body.player.stub }));
+    },
+    [],
+  );
 
   const loginWallet = useCallback(async () => {
     setError(null);
@@ -182,8 +204,8 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
   }, [applySession, tonConnectUI]);
 
   const value = useMemo(
-    () => ({ player, token, ready, error, loginStub, loginWallet, logout }),
-    [error, loginStub, loginWallet, logout, player, ready, token],
+    () => ({ player, token, ready, error, loginStub, loginWallet, rename, logout }),
+    [error, loginStub, loginWallet, logout, player, ready, rename, token],
   );
 
   return <WalletAuthContext.Provider value={value}>{children}</WalletAuthContext.Provider>;

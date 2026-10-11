@@ -1,13 +1,26 @@
 import { pulseTap } from "../telegram";
 import { useWalletAuth } from "./WalletAuth";
 
-export function WalletBar() {
-  const { player } = useWalletAuth();
+export function WalletBar({ onEditName }: { onEditName?: () => void }) {
+  const { player, logout } = useWalletAuth();
 
   return (
     <div className="flex max-w-[58vw] items-center justify-end gap-2">
       {!player ? <DevStubButton /> : null}
-      <ConnectGramButton />
+      <ConnectGramButton onEditName={onEditName} />
+      {player ? (
+        <button
+          type="button"
+          aria-label="Sign out"
+          onClick={() => {
+            pulseTap();
+            logout();
+          }}
+          className="shrink-0 rounded-full border border-white/40 px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-white/80"
+        >
+          Out
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -29,15 +42,19 @@ function DevStubButton() {
   );
 }
 
-export function ConnectGramButton() {
-  const { player, loginWallet, logout } = useWalletAuth();
+export function ConnectGramButton({ onEditName }: { onEditName?: () => void }) {
+  const { player, loginWallet } = useWalletAuth();
 
   const onClick = () => {
-    pulseTap();
     if (player) {
-      logout();
+      if (!onEditName) {
+        return;
+      }
+      pulseTap();
+      onEditName();
       return;
     }
+    pulseTap();
     void loginWallet();
   };
 

@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Headers, Patch, Post, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Body, Controller, ForbiddenException, Get, Headers, Patch, Post, UnauthorizedException } from "@nestjs/common";
 import { Address } from "@ton/core";
 import type { AuthVerifyRequest } from "@dotwars/shared";
 import { consumeNonce, issueNonce } from "./nonce-store";
@@ -81,7 +81,7 @@ export class AuthController {
     }
     const name = (body.name ?? "").trim().replace(/\s+/g, " ");
     if (name.length < 2 || name.length > 24) {
-      throw new UnauthorizedException("Name must be 2–24 characters");
+      throw new BadRequestException("Name must be 2–24 characters");
     }
     const player = await setPlayerName(session.address, name);
     if (!player) {

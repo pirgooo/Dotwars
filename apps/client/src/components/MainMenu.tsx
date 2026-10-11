@@ -1,6 +1,9 @@
+import { useEffect, useState } from "react";
 import type { MatchMode, PlayerProfile } from "@dotwars/shared";
+import { bindBackButton } from "../telegram";
 import { WalletBar } from "../wallet/ConnectGramButton";
-import { OrigamiDock } from "./origami/OrigamiDock";
+import { NameScreen } from "./NameScreen";
+import { OrigamiDock, OrigamiShell } from "./origami/OrigamiDock";
 import { FoldMark, OrigamiGallery } from "./origami/OrigamiArt";
 
 interface MainMenuProps {
@@ -12,10 +15,23 @@ interface MainMenuProps {
 }
 
 export function MainMenu({ busy, error, player, onPlay, onInvite }: MainMenuProps) {
+  const [naming, setNaming] = useState(false);
   const locked = busy || !player;
 
+  useEffect(() => {
+    if (!naming) {
+      return;
+    }
+    bindBackButton(() => setNaming(false));
+    return () => bindBackButton(null);
+  }, [naming]);
+
+  if (naming) {
+    return <NameScreen onDone={() => setNaming(false)} />;
+  }
+
   return (
-    <div className="origami-screen px-6 pb-6 pt-[var(--app-header)]">
+    <OrigamiShell>
       <header className="relative z-10 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 text-white">
           <FoldMark className="h-7 w-7" />
@@ -24,7 +40,7 @@ export function MainMenu({ busy, error, player, onPlay, onInvite }: MainMenuProp
             <p className="text-[10px] tracking-[0.18em] text-white/70">we love dots</p>
           </div>
         </div>
-        <WalletBar />
+        <WalletBar onEditName={player ? () => setNaming(true) : undefined} />
       </header>
 
       <div className="relative z-10 mt-8 text-center">
@@ -32,7 +48,7 @@ export function MainMenu({ busy, error, player, onPlay, onInvite }: MainMenuProp
         <p className="origami-kicker mt-3 text-white/80">Territory rts</p>
       </div>
 
-      <div className="relative z-10 flex flex-1 items-center">
+      <div className="relative z-10 flex min-h-0 flex-1 items-center">
         <OrigamiGallery />
       </div>
 
@@ -74,9 +90,6 @@ export function MainMenu({ busy, error, player, onPlay, onInvite }: MainMenuProp
           Invite to PvP
         </button>
       </OrigamiDock>
-      <p className="pointer-events-none absolute bottom-[var(--app-footer)] right-6 z-10 text-[10px] tracking-[0.18em] text-white/40">
-        v{__APP_VERSION__}
-      </p>
-    </div>
+    </OrigamiShell>
   );
 }

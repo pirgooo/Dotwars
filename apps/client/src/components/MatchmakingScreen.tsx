@@ -2,7 +2,7 @@ import { useState } from "react";
 import { formatStake } from "@dotwars/shared";
 import { pulseTap, shareInviteLink } from "../telegram";
 import { Crystal, FoldMark } from "./origami/OrigamiArt";
-import { OrigamiDock, OrigamiDockSlot } from "./origami/OrigamiDock";
+import { OrigamiDock, OrigamiDockSlot, OrigamiShell } from "./origami/OrigamiDock";
 
 interface MatchmakingScreenProps {
   onCancel: () => void;
@@ -48,7 +48,7 @@ export function MatchmakingScreen({
   };
 
   return (
-    <div className="origami-screen px-6 pb-6 pt-[var(--app-header)]">
+    <OrigamiShell>
       <header className="relative z-10 flex items-start">
         <div className="flex items-center gap-2 text-white">
           <FoldMark className="h-7 w-7" />
@@ -58,7 +58,7 @@ export function MatchmakingScreen({
           </div>
         </div>
       </header>
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden text-center">
         <Crystal className="h-24 w-24 animate-pulse" />
         <h1 className="origami-title mt-8 text-[42px]">{inviting ? "invite" : "search"}</h1>
         <p className="origami-kicker mt-3 text-white/80">
@@ -105,6 +105,6 @@ export function MatchmakingScreen({
           </>
         )}
       </OrigamiDock>
-    </div>
+    </OrigamiShell>
   );
 }

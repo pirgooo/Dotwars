@@ -1,10 +1,54 @@
 import { Client, type Room } from "colyseus.js";
-import { ClientMessage, ROOM_NAME, type GameState, type MatchMode } from "@dotwars/shared";
+import { ClientMessage, isBotId, ROOM_NAME, type GameState, type MatchMode } from "@dotwars/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getColyseusUrl } from "./colyseusUrl";
 import { buildInviteUrl } from "../telegram";
 
 export type MatchStatus = "idle" | "connecting" | "live" | "error";
+
+export interface HudFighter {
+  name: string;
+  color: string;
+}
+
+function shortName(name: string, fallback: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return fallback;
+  }
+  return trimmed.length > 12 ? `${trimmed.slice(0, 11)}…` : trimmed;
+}
+
+function readFighters(state: GameState, sessionId: string): { me: HudFighter; enemy: HudFighter } {
+  let me: HudFighter = { name: "You", color: "#ffffff" };
+  const others: (HudFighter & { bot: boolean })[] = [];
+  state.players?.forEach((player, id) => {
+    const fighter = {
+      name: shortName(player.name, isBotId(id) ? "Bot" : "Player"),
+      color: player.color || "#ffffff",
+      bot: isBotId(id),
+    };
+    if (id === sessionId) {
+      me = fighter;
+    } else {
+      others.push(fighter);
+    }
+  });
+  if (others.length === 0) {
+    return { me, enemy: { name: "Enemy", color: "#ef4444" } };
+  }
+  if (others.length === 1) {
+    return { me, enemy: others[0]! };
+  }
+  const humans = others.filter((fighter) => !fighter.bot);
+  if (humans.length === 1) {
+    return { me, enemy: humans[0]! };
+  }
+  if (humans.length === 0) {
+    return { me, enemy: { name: "Bots", color: others[0]?.color || "#ef4444" } };
+  }
+  return { me, enemy: humans[0]! };
+}
 
 function countBases(state: GameState, sessionId: string): { mine: number; enemy: number } {
   let mine = 0;
@@ -43,6 +87,8 @@ export function useMatchRoom() {
   const [countdown, setCountdown] = useState(0);
   const [myBases, setMyBases] = useState(0);
   const [enemyBases, setEnemyBases] = useState(0);
+  const [me, setMe] = useState<HudFighter>({ name: "You", color: "#ffffff" });
+  const [enemy, setEnemy] = useState<HudFighter>({ name: "Enemy", color: "#ef4444" });
   const [stakeGrams, setStakeGrams] = useState(0);
   const [rakeBps, setRakeBps] = useState(0);
   const [escrow, setEscrow] = useState<GameState["escrow"]>("none");
@@ -65,6 +111,8 @@ export function useMatchRoom() {
     setCountdown(0);
     setMyBases(0);
     setEnemyBases(0);
+    setMe({ name: "You", color: "#ffffff" });
+    setEnemy({ name: "Enemy", color: "#ef4444" });
     setSeekingOpponent(false);
     setInviteRoomId(null);
     setHostingInvite(false);
@@ -81,7 +129,8 @@ export function useMatchRoom() {
     if (nextPhase !== "waiting" && nextPhase !== "playing" && nextPhase !== "ended") {
       return;
     }
-    const { mine, enemy } = countBases(state, sessionId);
+    const { mine, enemy: enemyCount } = countBases(state, sessionId);
+    const fighters = readFighters(state, sessionId);
     setStatus("live");
     setPhase(nextPhase);
     setWinnerId(state.winnerId ?? "");
@@ -91,7 +140,9 @@ export function useMatchRoom() {
     setTimeLeft(state.timeLeft ?? 0);
     setCountdown(state.countdown ?? 0);
     setMyBases(mine);
-    setEnemyBases(enemy);
+    setEnemyBases(enemyCount);
+    setMe(fighters.me);
+    setEnemy(fighters.enemy);
     setStakeGrams(state.stakeGrams ?? 0);
     setRakeBps(state.rakeBps ?? 0);
     setEscrow(state.escrow ?? "none");
@@ -240,6 +291,8 @@ export function useMatchRoom() {
     countdown,
     myBases,
     enemyBases,
+    me,
+    enemy,
     inviteRoomId,
     hostingInvite,
     inviteUrl: inviteRoomId ? buildInviteUrl(inviteRoomId) : null,
