@@ -60,7 +60,7 @@ export function MainMenu({ busy, error, player, onPlay, onInvite }: MainMenuProp
               {player.draws ? ` · ${player.draws} draws` : ""}
             </>
           ) : (
-            "Connect Gram wallet to play"
+            "Log in to play"
           )
         }
         error={error ? <p className="text-center text-[12px] text-white">{error}</p> : null}

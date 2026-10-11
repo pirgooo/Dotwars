@@ -167,6 +167,13 @@ export function App(_props: AppProps) {
   };
 
   const inMenu = !room && status !== "connecting" && !challenge && !inviteLookup && !pickingStake;
+
+  useEffect(() => {
+    if (!inMenu || howToOpen || !auth.token) {
+      return;
+    }
+    void auth.refresh();
+  }, [inMenu, howToOpen, auth.token, auth.refresh]);
   const funding =
     Boolean(room) &&
     stakeGrams > 0 &&

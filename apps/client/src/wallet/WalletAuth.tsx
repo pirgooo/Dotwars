@@ -20,7 +20,9 @@ interface WalletAuthValue {
   token: string | null;
   ready: boolean;
   error: string | null;
+  login: () => Promise<void>;
   loginWallet: () => Promise<void>;
+  refresh: () => Promise<void>;
   rename: (name: string) => Promise<void>;
   logout: () => void;
 }
@@ -30,7 +32,9 @@ const WalletAuthContext = createContext<WalletAuthValue>({
   token: null,
   ready: false,
   error: null,
+  login: async () => undefined,
   loginWallet: async () => undefined,
+  refresh: async () => undefined,
   rename: async () => undefined,
   logout: () => undefined,
 });
@@ -73,6 +77,21 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
     applySession(session);
   }, [applySession]);
 
+  const refresh = useCallback(async () => {
+    const session = localStorage.getItem(TOKEN_KEY);
+    if (!session) {
+      return;
+    }
+    try {
+      const body = await fetch(`${getApiUrl()}/auth/me`, {
+        headers: { authorization: `Bearer ${session}` },
+      }).then((response) => readJson<{ player: PlayerProfile }>(response));
+      setPlayer((current) => ({ ...body.player, stub: current?.stub ?? body.player.stub }));
+    } catch {
+      // Keep the last known profile if the stats fetch fails.
+    }
+  }, []);
+
   const rename = useCallback(
     async (name: string) => {
       const token = localStorage.getItem(TOKEN_KEY);
@@ -108,6 +127,20 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
       setError(reason instanceof Error ? reason.message : "Could not open wallet");
     }
   }, [tonConnectUI]);
+
+  const login = useCallback(async () => {
+    setError(null);
+    try {
+      const initData = await waitTelegramInitData(800);
+      if (initData) {
+        await loginTelegram(initData);
+        return;
+      }
+      await loginWallet();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not sign in");
+    }
+  }, [loginTelegram, loginWallet]);
 
   useEffect(() => {
     let cancelled = false;
@@ -207,8 +240,8 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
   }, [applySession, tonConnectUI]);
 
   const value = useMemo(
-    () => ({ player, token, ready, error, loginWallet, rename, logout }),
-    [error, loginWallet, logout, player, ready, rename, token],
+    () => ({ player, token, ready, error, login, loginWallet, refresh, rename, logout }),
+    [error, login, loginWallet, logout, player, ready, refresh, rename, token],
   );
 
   return <WalletAuthContext.Provider value={value}>{children}</WalletAuthContext.Provider>;
