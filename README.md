@@ -35,7 +35,7 @@ Public matchmaking (**Find a match**) is a Coming soon stub. Stats live in a JSO
 
 ## Versioning
 
-The game is **one version** for the whole monorepo (`0.3.0` now). Client, server, `shared`, and the escrow contract keep the same number. Do not version packages separately.
+The game is **one version** for the whole monorepo (`0.3.1` now). Client, server, `shared`, and the escrow contract keep the same number. Do not version packages separately.
 
 Source of truth: a git tag `vX.Y.Z` plus a [GitHub Release](https://github.com/pirgooo/Dotwars/releases).
 
