@@ -3,6 +3,10 @@ export function getColyseusUrl(): string {
   if (explicit) {
     return explicit;
   }
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${window.location.hostname}:2567`;
+  const { protocol, hostname, port } = window.location;
+  const ws = protocol === "https:" ? "wss:" : "ws:";
+  if (port === "5173" || hostname === "localhost" || hostname === "127.0.0.1") {
+    return `${ws}//${hostname}:2567`;
+  }
+  return `${ws}//${hostname}${port ? `:${port}` : ""}`;
 }

@@ -10,7 +10,7 @@ import {
 } from "react";
 import type { AuthSessionResponse, AuthVerifyRequest, PlayerProfile } from "@dotwars/shared";
 import { useTonConnectUI } from "@tonconnect/ui-react";
-import { getApiUrl } from "../game/apiUrl";
+import { getApiUrl, readJson } from "../game/apiUrl";
 
 const TOKEN_KEY = "dotwars.session";
 const STUB_ADDRESS_KEY = "dotwars.stubAddress";
@@ -39,15 +39,6 @@ const WalletAuthContext = createContext<WalletAuthValue>({
 
 export function useWalletAuth() {
   return useContext(WalletAuthContext);
-}
-
-async function readJson<T>(response: Response): Promise<T> {
-  const data = (await response.json()) as T & { message?: string | string[] };
-  if (!response.ok) {
-    const message = Array.isArray(data.message) ? data.message[0] : data.message;
-    throw new Error(message || "Auth failed");
-  }
-  return data;
 }
 
 export function WalletAuthProvider({ children }: { children: ReactNode }) {

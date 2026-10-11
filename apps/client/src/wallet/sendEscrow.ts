@@ -1,14 +1,9 @@
 import type { EscrowDepositIntent } from "@dotwars/shared";
-import { getApiUrl } from "../game/apiUrl";
+import { getApiUrl, readJson } from "../game/apiUrl";
 
 export async function fetchDepositIntent(roomId: string): Promise<EscrowDepositIntent> {
   const response = await fetch(`${getApiUrl()}/escrow/deposit/${encodeURIComponent(roomId)}`);
-  const data = (await response.json()) as EscrowDepositIntent & { message?: string | string[] };
-  if (!response.ok) {
-    const message = Array.isArray(data.message) ? data.message[0] : data.message;
-    throw new Error(message || "Could not build deposit");
-  }
-  return data;
+  return readJson<EscrowDepositIntent>(response);
 }
 
 export async function sendEscrowDeposit(

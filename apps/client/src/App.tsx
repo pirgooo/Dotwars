@@ -11,7 +11,7 @@ import { MatchEndOverlay } from "./components/MatchEndOverlay";
 import { MatchHud } from "./components/MatchHud";
 import { MatchmakingScreen } from "./components/MatchmakingScreen";
 import { OrigamiPageMark } from "./components/origami/OrigamiDock";
-import { getApiUrl } from "./game/apiUrl";
+import { getApiUrl, readJson } from "./game/apiUrl";
 import { useMatchRoom } from "./game/useMatchRoom";
 import { bindBackButton, clearInviteFromUrl, pulseTap, readInviteCode } from "./telegram";
 import { fetchDepositIntent, sendEscrowDeposit } from "./wallet/sendEscrow";
@@ -95,7 +95,7 @@ export function App(_props: AppProps) {
             setChallenge({ roomId: code, hostName: "", stakeGrams: 0, expired: true });
             return;
           }
-          const data = (await response.json()) as InviteInfo;
+          const data = await readJson<InviteInfo>(response);
           setChallenge({
             roomId: data.roomId,
             hostName: data.hostName,
@@ -124,7 +124,7 @@ export function App(_props: AppProps) {
 
   useEffect(() => {
     void fetch(`${getApiUrl()}/escrow/config`)
-      .then((response) => response.json() as Promise<EscrowConfig>)
+      .then((response) => readJson<EscrowConfig>(response))
       .then(setEscrowConfig)
       .catch(() => setEscrowConfig(null));
   }, []);
