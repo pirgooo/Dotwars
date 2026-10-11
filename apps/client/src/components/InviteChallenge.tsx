@@ -10,6 +10,7 @@ interface InviteChallengeProps {
   locked: boolean;
   error: string | null;
   canAccept: boolean;
+  loggedIn: boolean;
   stakeGrams: number;
   onAccept: () => void;
   onDecline: () => void;
@@ -22,6 +23,7 @@ export function InviteChallenge({
   locked,
   error,
   canAccept,
+  loggedIn,
   stakeGrams,
   onAccept,
   onDecline,
@@ -55,11 +57,13 @@ export function InviteChallenge({
         stats={
           expired
             ? "This invite is no longer open"
-            : !canAccept
-              ? "Connect Gram wallet to accept"
-              : stakeGrams > 0
-                ? "You send GRAM to the contract after join"
-                : "Accept to join the match"
+            : !loggedIn
+              ? "Log in to accept"
+              : stakeGrams > 0 && !canAccept
+                ? "Paid duels coming soon"
+                : stakeGrams > 0
+                  ? "You send GRAM to the contract after join"
+                  : "Accept to join the match"
         }
         error={error ? <p className="text-center text-[12px] text-white">{error}</p> : null}
       >

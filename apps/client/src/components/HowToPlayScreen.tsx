@@ -13,11 +13,12 @@ export function completeHowToPlay(): void {
 }
 
 interface HowToPlayScreenProps {
+  fromMenu?: boolean;
   onContinue: () => void;
   onBack: () => void;
 }
 
-export function HowToPlayScreen({ onContinue, onBack }: HowToPlayScreenProps) {
+export function HowToPlayScreen({ fromMenu = false, onContinue, onBack }: HowToPlayScreenProps) {
   return (
     <OrigamiShell>
       <header className="relative z-10 flex items-start">
@@ -38,7 +39,7 @@ export function HowToPlayScreen({ onContinue, onBack }: HowToPlayScreenProps) {
           <li>Hold more bases to win</li>
         </ul>
       </div>
-      <OrigamiDock stats="Shown once">
+      <OrigamiDock stats={fromMenu ? "How to play" : "Shown once"}>
         <button
           type="button"
           onClick={() => {

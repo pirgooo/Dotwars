@@ -14,7 +14,8 @@ interface InviteStakeScreenProps {
 export function InviteStakeScreen({ walletOk, escrow, onConfirm, onCancel }: InviteStakeScreenProps) {
   const [index, setIndex] = useState(0);
   const stakeGrams = STAKE_PRESETS[index] ?? 0;
-  const paidBlocked = stakeGrams > 0 && (!escrow?.configured || !walletOk);
+  const paidLive = Boolean(escrow?.configured && !escrow.simulate);
+  const paidBlocked = stakeGrams > 0 && (!paidLive || !walletOk);
 
   const shift = (delta: number) => {
     pulseTap();
@@ -37,9 +38,9 @@ export function InviteStakeScreen({ walletOk, escrow, onConfirm, onCancel }: Inv
         <h1 className="origami-title mt-8 text-[42px]">stake</h1>
         <p className="origami-kicker mt-3 text-white/80">
           {stakeGrams > 0
-            ? escrow?.configured
+            ? paidLive
               ? `Winner takes ${formatStake(winnerPayoutGrams(stakeGrams, escrow.rakeBps))} · ${formatRake(escrow.rakeBps)} rake`
-              : "Escrow is not configured"
+              : "Paid duels are not live yet"
             : "No GRAM this match"}
         </p>
         <div className="mt-8 flex items-center gap-6">
@@ -51,7 +52,12 @@ export function InviteStakeScreen({ walletOk, escrow, onConfirm, onCancel }: Inv
           >
             −
           </button>
-          <p className="min-w-28 text-[28px] font-semibold tracking-wide text-white">{formatStake(stakeGrams)}</p>
+          <div className="min-w-28 text-center">
+            <p className="text-[28px] font-semibold tracking-wide text-white">{formatStake(stakeGrams)}</p>
+            {stakeGrams > 0 && !paidLive ? (
+              <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-white/80">Coming soon</p>
+            ) : null}
+          </div>
           <button
             type="button"
             disabled={index === STAKE_PRESETS.length - 1}
@@ -64,9 +70,13 @@ export function InviteStakeScreen({ walletOk, escrow, onConfirm, onCancel }: Inv
       </div>
       <OrigamiDock
         stats={
-          stakeGrams > 0 && !walletOk
-            ? "Connect Gram wallet to stake"
-            : "On-chain escrow · not a house wallet"
+          stakeGrams <= 0
+            ? "Free match · no GRAM"
+            : !paidLive
+              ? "Paid duels coming soon"
+              : !walletOk
+                ? "Log in with a Gram wallet to stake"
+                : "On-chain escrow · not a house wallet"
         }
       >
         <button

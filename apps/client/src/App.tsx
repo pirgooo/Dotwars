@@ -303,7 +303,11 @@ export function App(_props: AppProps) {
 
   if (howToOpen) {
     return (
-      <HowToPlayScreen onContinue={() => finishHowTo(true)} onBack={() => finishHowTo(false)} />
+      <HowToPlayScreen
+        fromMenu={afterHowTo === null}
+        onContinue={() => finishHowTo(true)}
+        onBack={() => finishHowTo(false)}
+      />
     );
   }
 
@@ -321,6 +325,7 @@ export function App(_props: AppProps) {
             !challenge.expired &&
             (challenge.stakeGrams <= 0 || !auth.player?.stub),
         )}
+        loggedIn={Boolean(auth.token)}
         stakeGrams={challenge?.stakeGrams ?? 0}
         onAccept={() => {
           if (howToPlayPending()) {
@@ -355,6 +360,11 @@ export function App(_props: AppProps) {
         player={auth.player}
         onPlay={onPlay}
         onInvite={onInvite}
+        onHowTo={() => {
+          pulseTap();
+          setAfterHowTo(null);
+          setHowToOpen(true);
+        }}
       />
     );
   }

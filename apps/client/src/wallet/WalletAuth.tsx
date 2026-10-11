@@ -97,7 +97,7 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
     async (name: string) => {
       const token = localStorage.getItem(TOKEN_KEY);
       if (!token) {
-        throw new Error("Connect Gram wallet");
+        throw new Error("Log in first");
       }
       setError(null);
       const body = await fetch(`${getApiUrl()}/auth/me`, {

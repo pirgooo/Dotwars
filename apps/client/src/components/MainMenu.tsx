@@ -12,9 +12,10 @@ interface MainMenuProps {
   player: PlayerProfile | null;
   onPlay: (mode: MatchMode) => void;
   onInvite: () => void;
+  onHowTo: () => void;
 }
 
-export function MainMenu({ busy, error, player, onPlay, onInvite }: MainMenuProps) {
+export function MainMenu({ busy, error, player, onPlay, onInvite, onHowTo }: MainMenuProps) {
   const [naming, setNaming] = useState(false);
   const locked = busy || !player;
 
@@ -33,13 +34,18 @@ export function MainMenu({ busy, error, player, onPlay, onInvite }: MainMenuProp
   return (
     <OrigamiShell>
       <header className="relative z-10 flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2 text-white">
+        <button
+          type="button"
+          onClick={onHowTo}
+          className="flex items-center gap-2 text-left text-white"
+          aria-label="How to play"
+        >
           <FoldMark className="h-7 w-7" />
           <div className="leading-tight">
             <p className="text-[11px] font-semibold tracking-[0.08em]">dot wars</p>
             <p className="text-[10px] tracking-[0.18em] text-white/70">we love dots</p>
           </div>
-        </div>
+        </button>
         <WalletBar onEditName={player ? () => setNaming(true) : undefined} />
       </header>
 
