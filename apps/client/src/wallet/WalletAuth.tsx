@@ -14,6 +14,7 @@ import { getApiUrl, readJson } from "../game/apiUrl";
 import { inTelegramMiniApp, waitTelegramInitData } from "../telegram";
 
 const TOKEN_KEY = "dotwars.session";
+const STUB_ADDRESS_KEY = "dotwars.stubAddress";
 
 interface WalletAuthValue {
   player: PlayerProfile | null;
@@ -112,6 +113,16 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const loginStub = useCallback(async () => {
+    const session = await fetch(`${getApiUrl()}/auth/stub`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ address: localStorage.getItem(STUB_ADDRESS_KEY) ?? undefined }),
+    }).then((response) => readJson<AuthSessionResponse>(response));
+    localStorage.setItem(STUB_ADDRESS_KEY, session.player.address);
+    applySession(session);
+  }, [applySession]);
+
   const loginWallet = useCallback(async () => {
     setError(null);
     try {
@@ -136,11 +147,15 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
         await loginTelegram(initData);
         return;
       }
+      if (import.meta.env.DEV) {
+        await loginStub();
+        return;
+      }
       await loginWallet();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not sign in");
     }
-  }, [loginTelegram, loginWallet]);
+  }, [loginStub, loginTelegram, loginWallet]);
 
   useEffect(() => {
     let cancelled = false;
