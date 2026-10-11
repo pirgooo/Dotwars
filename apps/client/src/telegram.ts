@@ -46,8 +46,26 @@ interface TelegramHaptic {
   notificationOccurred?: (type: string) => void;
 }
 
-function webApp(): TelegramWebApp | undefined {
-  return (window as Window & { Telegram?: { WebApp?: TelegramWebApp } }).Telegram?.WebApp;
+interface TelegramWebAppWithInit extends TelegramWebApp {
+  initData?: string;
+}
+
+function webApp(): TelegramWebAppWithInit | undefined {
+  return (window as Window & { Telegram?: { WebApp?: TelegramWebAppWithInit } }).Telegram?.WebApp;
+}
+
+export function readTelegramInitData(): string | null {
+  const fromWindow = webApp()?.initData?.trim();
+  if (fromWindow) {
+    return fromWindow;
+  }
+  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  const fromHash = new URLSearchParams(hash).get("tgWebAppData");
+  return fromHash?.trim() || null;
+}
+
+export function inTelegramMiniApp(): boolean {
+  return Boolean(readTelegramInitData());
 }
 
 function haptic(): TelegramHaptic | undefined {

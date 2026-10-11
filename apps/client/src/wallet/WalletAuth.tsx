@@ -11,16 +11,15 @@ import {
 import type { AuthSessionResponse, AuthVerifyRequest, PlayerProfile } from "@dotwars/shared";
 import { useTonConnectUI } from "@tonconnect/ui-react";
 import { getApiUrl, readJson } from "../game/apiUrl";
+import { readTelegramInitData } from "../telegram";
 
 const TOKEN_KEY = "dotwars.session";
-const STUB_ADDRESS_KEY = "dotwars.stubAddress";
 
 interface WalletAuthValue {
   player: PlayerProfile | null;
   token: string | null;
   ready: boolean;
   error: string | null;
-  loginStub: () => Promise<void>;
   loginWallet: () => Promise<void>;
   rename: (name: string) => Promise<void>;
   logout: () => void;
@@ -31,7 +30,6 @@ const WalletAuthContext = createContext<WalletAuthValue>({
   token: null,
   ready: false,
   error: null,
-  loginStub: async () => undefined,
   loginWallet: async () => undefined,
   rename: async () => undefined,
   logout: () => undefined,
@@ -66,21 +64,14 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
     }
   }, [tonConnectUI]);
 
-  const loginStub = useCallback(async () => {
-    setError(null);
-    try {
-      const session = await fetch(`${getApiUrl()}/auth/stub`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ address: localStorage.getItem(STUB_ADDRESS_KEY) ?? undefined }),
-      }).then((response) => readJson<AuthSessionResponse>(response));
-      localStorage.setItem(STUB_ADDRESS_KEY, session.player.address);
-      applySession(session);
-    } catch (reason) {
-      logout();
-      setError(reason instanceof Error ? reason.message : "Could not sign in");
-    }
-  }, [applySession, logout]);
+  const loginTelegram = useCallback(async (initData: string) => {
+    const session = await fetch(`${getApiUrl()}/auth/telegram`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ initData }),
+    }).then((response) => readJson<AuthSessionResponse>(response));
+    applySession(session);
+  }, [applySession]);
 
   const rename = useCallback(
     async (name: string) => {
@@ -119,38 +110,57 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
   }, [tonConnectUI]);
 
   useEffect(() => {
-    const existing = localStorage.getItem(TOKEN_KEY);
-    if (!existing) {
-      setReady(true);
-      return;
-    }
     let cancelled = false;
-    void fetch(`${getApiUrl()}/auth/me`, {
-      headers: { authorization: `Bearer ${existing}` },
-    })
-      .then((response) => readJson<{ player: PlayerProfile }>(response))
-      .then((body) => {
-        if (cancelled) {
-          return;
-        }
-        setToken(existing);
-        setPlayer(body.player);
-        setError(null);
+    const initData = readTelegramInitData();
+    const existing = localStorage.getItem(TOKEN_KEY);
+
+    const finish = () => {
+      if (!cancelled) {
         setReady(true);
-      })
-      .catch(() => {
-        if (cancelled) {
-          return;
+      }
+    };
+
+    const boot = async () => {
+      if (existing) {
+        try {
+          const body = await fetch(`${getApiUrl()}/auth/me`, {
+            headers: { authorization: `Bearer ${existing}` },
+          }).then((response) => readJson<{ player: PlayerProfile }>(response));
+          if (cancelled) {
+            return;
+          }
+          if (!body.player.stub || !initData) {
+            setToken(existing);
+            setPlayer(body.player);
+            setError(null);
+            finish();
+            return;
+          }
+        } catch {
+          localStorage.removeItem(TOKEN_KEY);
+          if (!cancelled) {
+            setToken(null);
+            setPlayer(null);
+          }
         }
-        localStorage.removeItem(TOKEN_KEY);
-        setToken(null);
-        setPlayer(null);
-        setReady(true);
-      });
+      }
+      if (initData) {
+        try {
+          await loginTelegram(initData);
+        } catch (reason) {
+          if (!cancelled) {
+            setError(reason instanceof Error ? reason.message : "Could not sign in with Telegram");
+          }
+        }
+      }
+      finish();
+    };
+
+    void boot();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loginTelegram]);
 
   useEffect(() => {
     return tonConnectUI.onStatusChange((wallet) => {
@@ -195,8 +205,8 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
   }, [applySession, tonConnectUI]);
 
   const value = useMemo(
-    () => ({ player, token, ready, error, loginStub, loginWallet, rename, logout }),
-    [error, loginStub, loginWallet, logout, player, ready, rename, token],
+    () => ({ player, token, ready, error, loginWallet, rename, logout }),
+    [error, loginWallet, logout, player, ready, rename, token],
   );
 
   return <WalletAuthContext.Provider value={value}>{children}</WalletAuthContext.Provider>;

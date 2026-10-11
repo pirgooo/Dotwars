@@ -6,7 +6,6 @@ export function WalletBar({ onEditName }: { onEditName?: () => void }) {
 
   return (
     <div className="flex max-w-[58vw] items-center justify-end gap-2">
-      {!player ? <DevStubButton /> : null}
       <ConnectGramButton onEditName={onEditName} />
       {player ? (
         <button
@@ -22,23 +21,6 @@ export function WalletBar({ onEditName }: { onEditName?: () => void }) {
         </button>
       ) : null}
     </div>
-  );
-}
-
-function DevStubButton() {
-  const { loginStub } = useWalletAuth();
-
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        pulseTap();
-        void loginStub();
-      }}
-      className="shrink-0 rounded-full border border-white/40 px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-white/80"
-    >
-      DEV
-    </button>
   );
 }
 

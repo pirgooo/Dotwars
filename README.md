@@ -109,7 +109,8 @@ Server env (`apps/server/.env`):
 | Variable | Purpose |
 | --- | --- |
 | `SESSION_SECRET` | Required in production |
-| `ALLOW_STUB_AUTH` | `1` keeps the **DEV** login |
+| `TELEGRAM_BOT_TOKEN` | BotFather token; verifies Mini App `initData` and signs players in with their Telegram name |
+| `ALLOW_STUB_AUTH` | Unused by the client; Telegram Mini App login replaced the DEV button |
 | `TON_PROOF_DOMAINS` | Domains allowed in `ton_proof` |
 | `ESCROW_CONTRACT` | Deployed escrow contract (holds stakes) |
 | `ORACLE_WALLET` | Server signer, Wallet v4R2 (cannot withdraw the pot) |

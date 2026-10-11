@@ -1,9 +1,10 @@
-import { BadRequestException, Body, Controller, ForbiddenException, Get, Headers, Patch, Post, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Body, Controller, ForbiddenException, Get, Headers, Patch, Post, ServiceUnavailableException, UnauthorizedException } from "@nestjs/common";
 import { Address } from "@ton/core";
 import type { AuthVerifyRequest } from "@dotwars/shared";
 import { consumeNonce, issueNonce } from "./nonce-store";
-import { getPlayer, setPlayerName, setPlayerStub } from "./player-store";
+import { getPlayer, setPlayerName, setPlayerStub, upsertTelegramPlayer } from "./player-store";
 import { isRawAddress, randomPayload, randomRawAddress, signSession, verifySession } from "./session";
+import { telegramDisplayName, telegramPlayerAddress, verifyTelegramInitData, type TelegramWebAppUser } from "./telegram-init-data";
 import { verifyTonProof } from "./ton-proof";
 
 function stubAllowed(): boolean {
@@ -28,6 +29,26 @@ export class AuthController {
     const payload = randomPayload();
     issueNonce(payload);
     return { payload };
+  }
+
+  @Post("telegram")
+  async telegram(@Body() body: { initData?: string }) {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim();
+    if (!botToken) {
+      throw new ServiceUnavailableException("Telegram login is not configured");
+    }
+    if (!body?.initData) {
+      throw new UnauthorizedException("Missing Telegram init data");
+    }
+    let user: TelegramWebAppUser;
+    try {
+      user = verifyTelegramInitData(body.initData, botToken);
+    } catch (reason) {
+      throw new UnauthorizedException(reason instanceof Error ? reason.message : "Invalid Telegram init data");
+    }
+    const address = telegramPlayerAddress(user.id);
+    const player = await upsertTelegramPlayer(address, telegramDisplayName(user));
+    return { token: signSession(address, true), player: { ...player, stub: true } };
   }
 
   @Post("stub")

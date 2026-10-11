@@ -31,7 +31,7 @@ function persist(map: Map<string, StoredPlayer>) {
   return writeChain;
 }
 
-export async function getOrCreatePlayer(address: string): Promise<StoredPlayer> {
+export async function getOrCreatePlayer(address: string, name?: string): Promise<StoredPlayer> {
   const map = await load();
   const existing = map.get(address);
   if (existing) {
@@ -39,12 +39,21 @@ export async function getOrCreatePlayer(address: string): Promise<StoredPlayer> 
   }
   const player: StoredPlayer = {
     address,
-    name: shortWalletName(address),
+    name: name && name.length >= 2 ? name.slice(0, 24) : shortWalletName(address),
     wins: 0,
     losses: 0,
     draws: 0,
     games: 0,
   };
+  map.set(address, player);
+  await persist(map);
+  return player;
+}
+
+export async function upsertTelegramPlayer(address: string, name: string): Promise<StoredPlayer> {
+  const player = await getOrCreatePlayer(address, name);
+  player.stub = true;
+  const map = await load();
   map.set(address, player);
   await persist(map);
   return player;
