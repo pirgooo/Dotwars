@@ -174,6 +174,16 @@ export function App(_props: AppProps) {
     }
     void auth.refresh();
   }, [inMenu, howToOpen, auth.token, auth.refresh]);
+
+  useEffect(() => {
+    if (phase !== "ended" || !auth.token) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void auth.refresh();
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [phase, auth.token, auth.refresh]);
   const funding =
     Boolean(room) &&
     stakeGrams > 0 &&
@@ -437,6 +447,7 @@ export function App(_props: AppProps) {
           <MatchEndOverlay
             result={result}
             timedOut={timedOut}
+            player={auth.player}
             canRestart={stakeGrams <= 0}
             stakeNote={
               stakeGrams > 0

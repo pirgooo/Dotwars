@@ -247,8 +247,19 @@ export function buildInviteUrl(roomId: string): string {
   return url.toString();
 }
 
-export function shareInviteLink(url: string) {
-  const share = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent("Dot Wars — 1v1 PvP")}`;
+export function playAppUrl(): string {
+  const app = import.meta.env.VITE_TELEGRAM_APP_URL as string | undefined;
+  if (app) {
+    return app.replace(/\/$/, "");
+  }
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
+export function shareInviteLink(url: string, text = "Dot Wars — 1v1 PvP") {
+  const share = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
   const open = webApp()?.openTelegramLink;
   if (open) {
     open(share);
