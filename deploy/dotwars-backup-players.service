@@ -1,0 +1,7 @@
+[Unit]
+Description=Backup Dot Wars player stats
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/dotwars/deploy/backup-players.sh
