@@ -11,7 +11,7 @@ import {
 import type { AuthSessionResponse, AuthVerifyRequest, PlayerProfile } from "@dotwars/shared";
 import { useTonConnectUI } from "@tonconnect/ui-react";
 import { getApiUrl, readJson } from "../game/apiUrl";
-import { readTelegramInitData } from "../telegram";
+import { inTelegramMiniApp, waitTelegramInitData } from "../telegram";
 
 const TOKEN_KEY = "dotwars.session";
 
@@ -111,8 +111,6 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    const initData = readTelegramInitData();
-    const existing = localStorage.getItem(TOKEN_KEY);
 
     const finish = () => {
       if (!cancelled) {
@@ -121,6 +119,8 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
     };
 
     const boot = async () => {
+      const initData = await waitTelegramInitData();
+      const existing = localStorage.getItem(TOKEN_KEY);
       if (existing) {
         try {
           const body = await fetch(`${getApiUrl()}/auth/me`, {
@@ -152,6 +152,8 @@ export function WalletAuthProvider({ children }: { children: ReactNode }) {
             setError(reason instanceof Error ? reason.message : "Could not sign in with Telegram");
           }
         }
+      } else if (inTelegramMiniApp()) {
+        setError("Could not read Telegram login. Close the Mini App and open it from the bot.");
       }
       finish();
     };

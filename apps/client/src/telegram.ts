@@ -1,8 +1,10 @@
 import {
   init,
+  initDataRaw,
   miniApp,
   requestContentSafeAreaInsets,
   requestSafeAreaInsets,
+  retrieveRawInitData,
   swipeBehavior,
   viewport,
 } from "@telegram-apps/sdk";
@@ -48,24 +50,57 @@ interface TelegramHaptic {
 
 interface TelegramWebAppWithInit extends TelegramWebApp {
   initData?: string;
+  ready?: () => void;
+  platform?: string;
 }
 
 function webApp(): TelegramWebAppWithInit | undefined {
   return (window as Window & { Telegram?: { WebApp?: TelegramWebAppWithInit } }).Telegram?.WebApp;
 }
 
-export function readTelegramInitData(): string | null {
-  const fromWindow = webApp()?.initData?.trim();
-  if (fromWindow) {
-    return fromWindow;
+function firstNonEmpty(...values: Array<string | null | undefined>): string | null {
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (trimmed) {
+      return trimmed;
+    }
   }
-  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  return null;
+}
+
+export function readTelegramInitData(): string | null {
+  webApp()?.ready?.();
+  let fromSdk: string | null = null;
+  try {
+    fromSdk = retrieveRawInitData() ?? initDataRaw() ?? null;
+  } catch {
+    fromSdk = initDataRaw() ?? null;
+  }
+  const hash = window.location.hash.replace(/^#/, "");
+  const search = window.location.search.replace(/^\?/, "");
   const fromHash = new URLSearchParams(hash).get("tgWebAppData");
-  return fromHash?.trim() || null;
+  const fromSearch = new URLSearchParams(search).get("tgWebAppData");
+  return firstNonEmpty(fromSdk, webApp()?.initData, fromHash, fromSearch);
 }
 
 export function inTelegramMiniApp(): boolean {
-  return Boolean(readTelegramInitData());
+  if (readTelegramInitData()) {
+    return true;
+  }
+  const platform = webApp()?.platform;
+  return Boolean(platform && platform !== "unknown");
+}
+
+export async function waitTelegramInitData(timeoutMs = 2500): Promise<string | null> {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const data = readTelegramInitData();
+    if (data) {
+      return data;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+  }
+  return readTelegramInitData();
 }
 
 function haptic(): TelegramHaptic | undefined {
