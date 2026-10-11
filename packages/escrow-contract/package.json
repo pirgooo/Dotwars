@@ -1,6 +1,6 @@
 {
   "name": "@dotwars/escrow-contract",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "scripts": {
     "build": "tact --config tact.config.json",

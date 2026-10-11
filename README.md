@@ -25,7 +25,7 @@ The client draws the field with **PixiJS v8** and the UI with **React + Tailwind
 - Vs bots (two-bot FFA) and invite 1v1 PvP
 - Guest duel screen: accept / decline
 - Invite PvP escrow: non-custodial TON contract, 10% rake, winner payout / draw refund
-- Gram/TON wallet login (`ton_proof`); temporary **DEV** stub for demos
+- Gram/TON wallet login (`ton_proof`) and Telegram Mini App login
 - Origami Klein-blue UI, fullscreen Mini App, iPhone safe area
 - Live host: `dotwars.candysshare.online`
 
@@ -86,7 +86,7 @@ npm run build              # shared → server → client
 npm run start              # production server build
 ```
 
-In a regular browser the UI works; Telegram chrome is skipped. Use **DEV** to log in without a wallet.
+In a regular browser the UI works; Telegram chrome is skipped. Use **Log in** (wallet) or open the Mini App for Telegram login.
 
 ---
 
@@ -110,7 +110,6 @@ Server env (`apps/server/.env`):
 | --- | --- |
 | `SESSION_SECRET` | Required in production |
 | `TELEGRAM_BOT_TOKEN` | BotFather token; verifies Mini App `initData` and signs players in with their Telegram name |
-| `ALLOW_STUB_AUTH` | Unused by the client; Telegram Mini App login replaced the DEV button |
 | `TON_PROOF_DOMAINS` | Domains allowed in `ton_proof` |
 | `ESCROW_CONTRACT` | Deployed escrow contract (holds stakes) |
 | `ORACLE_WALLET` | Server signer, Wallet v4R2 (cannot withdraw the pot) |
@@ -153,7 +152,7 @@ New types, WebSocket messages, and state schemas are added only in `packages/sha
 
 The full simulation lives on the server: troop updates, collisions, unit movement, winner checks. The client **does not** resolve combat. It sends an intent (for example, “send troops from base A to base B”) and renders **State Sync**.
 
-Player identity is the Gram/TON wallet. The server verifies `ton_proof` and issues a session bound to the address. **DEV** is a stub for tests and demos only.
+Player identity is the Telegram account (Mini App) or the Gram/TON wallet (`ton_proof`). The server issues a session bound to that identity.
 
 ---
 

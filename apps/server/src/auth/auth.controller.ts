@@ -1,15 +1,11 @@
-import { BadRequestException, Body, Controller, ForbiddenException, Get, Headers, Patch, Post, ServiceUnavailableException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Headers, Patch, Post, ServiceUnavailableException, UnauthorizedException } from "@nestjs/common";
 import { Address } from "@ton/core";
 import type { AuthVerifyRequest } from "@dotwars/shared";
 import { consumeNonce, issueNonce } from "./nonce-store";
 import { getPlayer, setPlayerName, setPlayerStub, upsertTelegramPlayer } from "./player-store";
-import { isRawAddress, randomPayload, randomRawAddress, signSession, verifySession } from "./session";
+import { randomPayload, signSession, verifySession } from "./session";
 import { telegramDisplayName, telegramPlayerAddress, verifyTelegramInitData, type TelegramWebAppUser } from "./telegram-init-data";
 import { verifyTonProof } from "./ton-proof";
-
-function stubAllowed(): boolean {
-  return process.env.NODE_ENV !== "production" || process.env.ALLOW_STUB_AUTH === "1";
-}
 
 function bearer(header?: string): string | undefined {
   if (!header?.startsWith("Bearer ")) {
@@ -48,16 +44,6 @@ export class AuthController {
     }
     const address = telegramPlayerAddress(user.id);
     const player = await upsertTelegramPlayer(address, telegramDisplayName(user));
-    return { token: signSession(address, true), player: { ...player, stub: true } };
-  }
-
-  @Post("stub")
-  async stub(@Body() body: { address?: string }) {
-    if (!stubAllowed()) {
-      throw new ForbiddenException("Stub login is only available in development");
-    }
-    const address = body?.address && isRawAddress(body.address) ? body.address.toLowerCase() : randomRawAddress();
-    const player = await setPlayerStub(address, true);
     return { token: signSession(address, true), player: { ...player, stub: true } };
   }
 
