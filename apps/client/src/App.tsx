@@ -4,6 +4,7 @@ import type { EscrowConfig, InviteInfo, MatchMode } from "@dotwars/shared";
 import { formatStake, winnerPayoutGrams } from "@dotwars/shared";
 import { EscrowScreen } from "./components/EscrowScreen";
 import { GameCanvas } from "./components/GameCanvas";
+import { completeHowToPlay, HowToPlayScreen, howToPlayPending } from "./components/HowToPlayScreen";
 import { InviteChallenge } from "./components/InviteChallenge";
 import { InviteStakeScreen } from "./components/InviteStakeScreen";
 import { MainMenu } from "./components/MainMenu";
@@ -66,6 +67,8 @@ export function App(_props: AppProps) {
   const [inviteIgnored, setInviteIgnored] = useState(false);
   const [inviteLookup, setInviteLookup] = useState(() => Boolean(readInviteCode()));
   const [pickingStake, setPickingStake] = useState(false);
+  const [howToOpen, setHowToOpen] = useState(false);
+  const [afterHowTo, setAfterHowTo] = useState<"bot" | "invite" | "accept" | null>(null);
   const [pendingStake, setPendingStake] = useState(0);
   const [escrowConfig, setEscrowConfig] = useState<EscrowConfig | null>(null);
   const [sendingStake, setSendingStake] = useState(false);
@@ -180,7 +183,32 @@ export function App(_props: AppProps) {
   const searching = queuedMode === "pvp" && status !== "error" && !pvpMatched && !funding;
   const inMatch = Boolean(room && !searching);
 
+  const finishHowTo = (continuePlay: boolean) => {
+    completeHowToPlay();
+    const next = afterHowTo;
+    setHowToOpen(false);
+    setAfterHowTo(null);
+    if (!continuePlay) {
+      return;
+    }
+    if (next === "bot" && auth.token) {
+      void play("bot", auth.token);
+      return;
+    }
+    if (next === "invite") {
+      setPickingStake(true);
+      return;
+    }
+    if (next === "accept") {
+      acceptChallenge();
+    }
+  };
+
   useEffect(() => {
+    if (howToOpen) {
+      bindBackButton(() => finishHowTo(false));
+      return () => bindBackButton(null);
+    }
     if (challenge || inviteLookup) {
       bindBackButton(declineChallenge);
       return () => bindBackButton(null);
@@ -191,13 +219,18 @@ export function App(_props: AppProps) {
     }
     bindBackButton(inMenu ? null : leaveToMenu);
     return () => bindBackButton(null);
-  }, [challenge, inviteLookup, pickingStake, inMenu, leaveToMenu]);
+  }, [howToOpen, challenge, inviteLookup, pickingStake, inMenu, leaveToMenu]);
 
   const onPlay = (mode: MatchMode) => {
     if (!auth.token) {
       return;
     }
     pulseTap();
+    if (howToPlayPending()) {
+      setAfterHowTo(mode === "bot" ? "bot" : "invite");
+      setHowToOpen(true);
+      return;
+    }
     void play(mode, auth.token);
   };
 
@@ -206,6 +239,11 @@ export function App(_props: AppProps) {
       return;
     }
     pulseTap();
+    if (howToPlayPending()) {
+      setAfterHowTo("invite");
+      setHowToOpen(true);
+      return;
+    }
     setPickingStake(true);
   };
 
@@ -256,6 +294,12 @@ export function App(_props: AppProps) {
         ? "win"
         : "lose";
 
+  if (howToOpen) {
+    return (
+      <HowToPlayScreen onContinue={() => finishHowTo(true)} onBack={() => finishHowTo(false)} />
+    );
+  }
+
   if (inviteLookup || challenge) {
     return (
       <InviteChallenge
@@ -271,7 +315,15 @@ export function App(_props: AppProps) {
             (challenge.stakeGrams <= 0 || !auth.player?.stub),
         )}
         stakeGrams={challenge?.stakeGrams ?? 0}
-        onAccept={acceptChallenge}
+        onAccept={() => {
+          if (howToPlayPending()) {
+            pulseTap();
+            setAfterHowTo("accept");
+            setHowToOpen(true);
+            return;
+          }
+          acceptChallenge();
+        }}
         onDecline={declineChallenge}
       />
     );
